@@ -35,7 +35,7 @@ def DadosOnvio():
 
 @st.cache_data
 def DadosAta():
-    base_ata = pd.read_excel(r"T:\Bases\ata mes 4.xlsx")
+    base_ata = pd.read_excel(r"ata mes 4.xlsx")
     base_ata["Data"] = pd.to_datetime(base_ata["Data"],format="%d/%m/%Y") #alterar o formato da data
     base_ata["Prazo para realização"]= base_ata["Data"].dt.to_period("d").dt.strftime("%d/%m/%Y")
 
