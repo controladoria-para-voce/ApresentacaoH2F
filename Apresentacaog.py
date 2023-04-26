@@ -55,10 +55,10 @@ class apresentacao():
     def __init__(self):
     
         #self.base_extratos = pd.read_excel(r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\Extratos Jan-Mar.xlsx")
-        self.logoalldaxreduzida = Image.open("logoalldaxred.png")
-        self.logoh2f = Image.open("logoh2f.png")
-        self.logos = Image.open("logosalt.png")
-        self.resultadosicone = Image.open("resukt.png")
+        self.logoalldaxreduzida = Image.open(r"Logos\logoalldaxred.png")
+        self.logoh2f = Image.open(r"Logos\logoh2f.png")
+        self.logos = Image.open(r"Logos\logosalt.png")
+        self.resultadosicone = Image.open(r"Logos\resukt.png")
 
 #####FUNÇÃO LEMBRETES:_____________________________________________________________________________
     def Lembretes(self):
