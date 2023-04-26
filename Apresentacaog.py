@@ -978,7 +978,7 @@ class apresentacao():
     ###CHAMADOR DE FUNÇÕES - GRÁFICO 1,2 e 3 GERAL:____________________________________________________________
 
             GraficoonviogeralA,GraficoonviogeralB = st.columns((1,0.01))
-            self.Onvio_chamadografico1(GraficoonviogeralA, titulodografico= "% de chamados",
+            self.Onvio_chamadografico1(GraficoonviogeralA, titulodografico= "Percentual de Chamados",
                                        filtrotratativaonvio=filtro_tratativaonvio) 
             
             GraficoonviogeralC, GraficoonviogeralD = st.columns((1,0.01))
@@ -1043,7 +1043,7 @@ class apresentacao():
 ###CHAMADOR DE FUNÇÕES - ADMISSÃO:____________________________________________________________
         ###CHAMADOR DE FUNÇÕES - CARD valor total FÉRIAS:____________________________________________________________
                 colunaadmissaoA,colunaadmissaoB,colunaadmissaoC = st.columns((1,1,1))
-                colunaadmissaoA.metric(label="salario total", value=self.Admissoes(#filtroserviçoadmissao=filtroadmissao_serviço1,
+                colunaadmissaoA.metric(label="Salário Total", value=self.Admissoes(#filtroserviçoadmissao=filtroadmissao_serviço1,
                                                                          filtrocargoadmissao=filtroadmissao_cargo1,
                                                                          filtroserviçoadmissao =  filtroadmissao_serviço1))
 
@@ -1053,10 +1053,10 @@ class apresentacao():
 #obs.: gáfico vertical - evolução mensal
 
                 GraficoevolucaomensaladmissaoA,GraficoevolucaomensaladmissaoB = st.columns((1,0.01)) 
-                self.Graficoevolucaomensaladmissao(GraficoevolucaomensaladmissaoA,
+                self.Graficoevolucaomensaladmissao(GraficoevolucaomensaladmissaoB,
                                             colunadataframe= "admissao",
                                            orientação= "v",
-                                           titulodografico= "Quantidade mensal de admissões",
+                                           titulodografico= "Quantidade Mensal de Admissões",
                                             filtroadmissaoservico =  filtroadmissao_serviço1,
                                             filtroadmissaocargo = filtroadmissao_cargo1,
                                             filtroadmissaomês=  filtroadmissao_mês1 )
@@ -1066,7 +1066,7 @@ class apresentacao():
                 self.Graficoadmissaoativos(GraficoativosadmissaoB,
                                            colunadataframe="admissao",
                                            orientação= "v",
-                                           titulodografico= "colaboradores ativos",
+                                           titulodografico= "Colaboradores Ativos",
                                            filtroadmissaosituacao8=filtroadmissao_ativos8,
                                            filtroadmissaomês=filtroadmissao_mês1)
 
@@ -1075,7 +1075,7 @@ class apresentacao():
                 self.Graficocargoadmissao(GraficocargoadmissaoA,
                                           colunadataframe= "nome_cargo",
                                           orientação= "h",
-                                          titulodografico="Custo por cargo",
+                                          titulodografico="Custo por Cargo",
                                           filtromêsadmissao=  filtroadmissao_mês1)
                 
         #obs.: gáfico horizontal - Serviços
@@ -1158,7 +1158,7 @@ class apresentacao():
             self.Graficoserviço_rescisao(colgraficorescisao2,
                                      colunadataframe= "sq_nome_servico",
                                      orientação= "h",
-                                     titulodografico= "Custos por Centro de Serviços",
+                                     titulodografico= "Custo por Centro de Serviço",
                                      filtro_mêsrescisao = filtrorescisao_mês1
                                      )
             
@@ -1246,7 +1246,7 @@ class apresentacao():
             self.Graficoserviço_ferias(Colunaparagraficoferias1, #chamador da coluna criada
                                        colunadodataframe="sq_nome_servico", #atalho presente no código do gráfico e nome da coluna que será selecionada
                                        orientação="h", #orientação do gráfico - horizontal
-                                       titulodografico="Custos por Centro de Serviços",
+                                       titulodografico="Custo por Centro de Serviço",
                                        filtro_mêsferias=filtro_mêsferias) #, inserir filtro_serviçoferias, filtro_centrodecustoferias - caso va puxar dos filtros
             
         ##obs: Gráfico vertical - Centro de custo
@@ -1254,7 +1254,7 @@ class apresentacao():
             self.Graficocentrodecusto_ferias(Colunaparagraficoferias3, #chamador da coluna criada
                                        colunadodataframe="sq_nome_ccustos", #atalho presente no código do gráfico e nome da coluna que será selecionada
                                        orientação="v" , #orientação do gráfico - vertical
-                                       titulodografico="Custos por Centro de Custo",
+                                       titulodografico="Custo por Centro de Custo",
                                        filtro_mêsferias=filtro_mêsferias) #, inserir filtro_serviçoferias, filtro_centrodecustoferias - caso va puxar dos filtros
 
 
