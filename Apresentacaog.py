@@ -30,7 +30,7 @@ def DadosAdmissao():
 
 @st.cache_data
 def DadosOnvio():
-    base_chamados = pd.read_excel(r"ndicadores do dp jan-dez.xlsx")
+    base_chamados = pd.read_excel(r"Indicadores do dp jan-dez.xlsx")
     return base_chamados
 
 @st.cache_data
