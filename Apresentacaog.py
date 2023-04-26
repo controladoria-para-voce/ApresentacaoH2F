@@ -20,17 +20,17 @@ def DadosFerias(): #função criada para importar o arquivo
 
 @st.cache_data
 def DadosRescisao():
-    base_rescisao = pd.read_excel(r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\rescisões jan-mar.xlsx")
+    base_rescisao = pd.read_excel(r"rescisões jan-mar.xlsx")
     return base_rescisao
 
 @st.cache_data
 def DadosAdmissao():
-    base_admissao = pd.read_excel(r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\Admissões jan-mar.xlsx")
+    base_admissao = pd.read_excel(r"Admissões jan-mar.xlsx")
     return base_admissao
 
 @st.cache_data
 def DadosOnvio():
-    base_chamados = pd.read_excel(r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\Indicadores do dp jan-dez.xlsx")
+    base_chamados = pd.read_excel(r"ndicadores do dp jan-dez.xlsx")
     return base_chamados
 
 @st.cache_data
