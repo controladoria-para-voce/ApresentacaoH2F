@@ -15,7 +15,7 @@ import hydralit_components as hc
 ###PARA SUBIR BASE DE DADOS:________________________________________________________________
 @st.cache_data #Irá salvar as bases de dados uma única vez no sistema interno - #para não carregar a base de dados a todo momento - diminui o custo de processamento
 def DadosFerias(): #função criada para importar o arquivo
-    base_ferias = pd.read_excel(r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\férias jan-mar.xlsx") #Caminho da pasta
+    base_ferias = pd.read_excel(r"férias jan-mar.xlsx") #Caminho da pasta
     return base_ferias #return = resultado da função
 
 @st.cache_data
@@ -35,7 +35,7 @@ def DadosOnvio():
 
 @st.cache_data
 def DadosAta():
-    base_ata = pd.read_excel(r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\1. RELATÓRIOS FOLHA\ata\ata mes 4.xlsx")
+    base_ata = pd.read_excel(r"T:\Bases\ata mes 4.xlsx")
     base_ata["Data"] = pd.to_datetime(base_ata["Data"],format="%d/%m/%Y") #alterar o formato da data
     base_ata["Prazo para realização"]= base_ata["Data"].dt.to_period("d").dt.strftime("%d/%m/%Y")
 
