@@ -438,7 +438,7 @@ class apresentacao():
         cardadmissao = DadosAdmissao()
         #print(cardadmissao.dtypes)
         if filtroadmissaosituacao8 == "Todos":
-            print("Todos") 
+            pass 
        
         else:
             if filtroadmissaosituacao8 == "Ativo":
@@ -446,7 +446,7 @@ class apresentacao():
             else: 
                 A = 1 
             cardadmissao = cardadmissao[cardadmissao["situacao"]==A]
-            print(cardadmissao)
+            #print(cardadmissao)
             #print(f"deu certo {filtroadmissaosituacao8}")
             #print(filtroadmissaosituacao8=="1")
 
@@ -870,9 +870,9 @@ class apresentacao():
                                   default_index= 0) #para identificar qual índice iniciará
             
 #####FORMATAÇÃO DE TODAS AS PÁGINAS:____________________________________________________________              
-        espaco_tela1,espaco_tela2,espaco_tela3,espaco_tela4, espaco_tela5= st.columns([0.07,2,10,1,2]) #Definição de colunas nas páginas do streamlit
-        with espaco_tela3: #definição de coluna para a informação abaixo:
-            espaco_tela3.title('Apresentação de Resultados') #o título ao lado será inserido na "2° coluna" de todas as páginas do projeto
+        espaco_tela1,espaco_tela2,espaco_tela3,espaco_tela4, espaco_tela5= st.columns([0.05,15,2,1,2]) #Definição de colunas nas páginas do streamlit
+        with espaco_tela2: #definição de coluna para a informação abaixo:
+            espaco_tela2.title("Apresentação de Resultados :chart:") #o título ao lado será inserido na "2° coluna" de todas as páginas do projeto, entre o : : é colocado o icone através do site https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/
          
          #Obs1 - Os dois itens abaixo (que estão comentados) foram inativados pois foi possível colocar as duas imagens no menu. 
         #with espaco_tela5: #para inserir imagem no topo de todas as páginas do projeto - ao lado do título - a imagem ficará na "5° coluna"
@@ -881,8 +881,8 @@ class apresentacao():
         #with espaco_tela3: #para inserir imagem no topo de todas as páginas do projeto - ao lado do título - a imagem ficará na "3° coluna"
            #st.image(self.logoh2f, width=170) #A imagem será carregada do item "para subir as imagens", "width" para definir o tamanho da imagem
 
-        with espaco_tela3:   #para inserir imagem no topo de todas as páginas do projeto - ao lado do título - a imagem ficará na "3° coluna"
-           st.image(self.resultadosicone, width=60) #A imagem será carregada do item "para subir as imagens", "width" para definir o tamanho da imagem
+        #with espaco_tela3:   #para inserir imagem no topo de todas as páginas do projeto - ao lado do título - a imagem ficará na "3° coluna"
+           #st.image(self.resultadosicone, width=60) #A imagem será carregada do item "para subir as imagens", "width" para definir o tamanho da imagem
 
 
 #####FORMATAÇÃO DA PRIMEIRA PÁGINA - LEMBRETES:____________________________________________________________              
@@ -890,7 +890,7 @@ class apresentacao():
             with open('style.css') as f:
                st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-            st.title('Para não esquecer')
+            st.title('Para não esquecer :heavy_exclamation_mark:')
 
 
 
