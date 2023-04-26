@@ -1053,7 +1053,7 @@ class apresentacao():
 #obs.: gáfico vertical - evolução mensal
 
                 GraficoevolucaomensaladmissaoA,GraficoevolucaomensaladmissaoB = st.columns((1,0.01)) 
-                self.Graficoevolucaomensaladmissao(GraficoevolucaomensaladmissaoB,
+                self.Graficoevolucaomensaladmissao(GraficoevolucaomensaladmissaoA,
                                             colunadataframe= "admissao",
                                            orientação= "v",
                                            titulodografico= "Quantidade Mensal de Admissões",
