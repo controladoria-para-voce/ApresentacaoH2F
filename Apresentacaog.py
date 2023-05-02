@@ -51,6 +51,12 @@ def DadosAta():
 
     return base_ata
 
+@st.cache_data
+def DadosRubricas():
+    base_rubrica = pd.read_excel(r"Rubricas Utilizadas Jan-Mar.xlsx")
+    base_rubrica['mes'] = base_rubrica["cp_competencia"].dt.to_period("M").dt.strftime('%m/%Y')
+    return base_rubrica
+
 class apresentacao():
 ###PARA SUBIR AS IMAGENS:_______________________________________________________________
     def __init__(self):
@@ -104,8 +110,16 @@ class apresentacao():
                                                             visible = True)))
         return coluna.plotly_chart(Tabelaata, use_container_width=True)
         
-
-
+#####FUNÇÃO RÚBRICAS:_____________________________________________________________________________
+    def Rubricasdafolha(self, coluna, titulodografico, filtrodata, filtromodelo):
+        cardrubricas = DadosRubricas()
+        print(cardrubricas)
+        if filtromodelo == "Todos":
+            if filtrodata == "Todos":
+                card = cardrubricas.groupby(["cp3_nome_evento"]).sum().reset_index()
+            else: 
+                card = cardrubricas([cardrubricas["mes"]==filtrodata])
+        
 
 
 #####FUNÇÃO FÉRIAS:_____________________________________________________________________________
@@ -379,7 +393,7 @@ class apresentacao():
         return card_5
 
 
-    ###PARA O PRIMEIRO GRÁFICO DE EVOLUÇÃO MENSAL - ADMISSÃO:_______________________________________________________________        
+    ###PARA O PRIMEIRO GRÁFICO DE QTD MENSAL - ADMISSÃO:_______________________________________________________________        
     def Graficoevolucaomensaladmissao(self, coluna, colunadataframe, orientação, titulodografico,filtroadmissaomês, filtroadmissaoservico,filtroadmissaocargo):
         cardadmissao = DadosAdmissao()
         if filtroadmissaoservico == "Todos":
@@ -434,7 +448,7 @@ class apresentacao():
 
         return coluna.plotly_chart(graficoevolucaomensaladmissao, use_container_width = True)
     
-    ###PARA O SEGUNDO GRÁFICO DE SERVIÇOS - ADMISSAO:_______________________________________________________________
+    ###PARA O SEGUNDO GRÁFICO DE COLABORADORES ATIVOS - ADMISSAO:_______________________________________________________________
     def Graficoadmissaoativos(self,coluna,colunadataframe,orientação,titulodografico,filtroadmissaomês,filtroadmissaosituacao8):
         cardadmissao = DadosAdmissao()
         #print(cardadmissao.dtypes)
@@ -886,8 +900,8 @@ class apresentacao():
 #####MENU:____________________________________________________________        
             st.sidebar.image(self.logos, use_column_width=True) #Imagem que virá no menu, "use_column..." para centralizar a imagem
             choose = option_menu("H2F",  #nome no topo do menu, título do menu
-                                  ["Lembretes","Onvio/Chamados", "Admissão", "Rescisão","Férias"], #abas/páginas
-                                  icons = ['alarm','gear','cash-coin','cash', 'paperclip'], #ícones para cada opção de página
+                                  ["Lembretes","Onvio/Chamados", "Rubricas", "Admissão", "Rescisão","Férias"], #abas/páginas
+                                  icons = ['alarm','gear','pencil-square','cash-coin','cash', 'paperclip'], #ícones para cada opção de página
                                   menu_icon='list', #ícone do título do menu
                                   default_index= 0) #para identificar qual índice iniciará
             
@@ -943,7 +957,7 @@ class apresentacao():
             self.Ata(colunatabelaata1)
 
 
-#####FORMATAÇÃO DA PRIMEIRA PÁGINA - ONVIO/CHAMADO:____________________________________________________________              
+#####FORMATAÇÃO DA SEGUNDA PÁGINA - ONVIO/CHAMADO:____________________________________________________________              
         if choose == "Onvio/Chamados":  #Bloco de código Geral - tudo será dentro dele
             with open('style.css') as f:
                st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
@@ -1007,7 +1021,16 @@ class apresentacao():
                                        titulodografico= "Quantidade de tratativas",
                                         filtrotratativaonvio=filtro_tratativaonvio,
                                         data=filtro_dataonvio)
-                                       
+
+###FORMATAÇÃO DA TERCEIRA PÁGINA - RUBRICAS:____________________________________________________________ 
+        if choose == "Rúbricas":
+            with open('style.css') as f:
+                st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html= True)
+            st.title("Resumo de Rúbricas")
+            
+        
+
+
 #####FORMATAÇÃO DA PRIMEIRA SEGUNDA - ADMISSÃO:____________________________________________________________   
         elif choose == "Admissão":
                 with open('style.css') as f:
@@ -1278,22 +1301,7 @@ class apresentacao():
                                        filtro_mêsferias=filtro_mêsferias) #, inserir filtro_serviçoferias, filtro_centrodecustoferias - caso va puxar dos filtros
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-         ###FORMATAÇÃO DA QUINTA PÁGINA - EXTRATOS:____________________________________________________________      
+    ###FORMATAÇÃO DA QUINTA PÁGINA - RUBRICAS:____________________________________________________________      
        
 
 
