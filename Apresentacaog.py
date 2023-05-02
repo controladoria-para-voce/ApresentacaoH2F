@@ -31,6 +31,7 @@ def DadosAdmissao():
 @st.cache_data
 def DadosOnvio():
     base_chamados = pd.read_excel(r"Indicadores do dp jan-dez.xlsx")
+    base_chamados['mes'] = base_chamados["Competencia"].dt.to_period("M").dt.strftime('%m/%Y') #PARA ALTERAR FORMATO DA DATA (MêS/Ano) 
     return base_chamados
 
 @st.cache_data
@@ -562,15 +563,26 @@ class apresentacao():
 
     ###PARA O PRIMEIRO GRÁFICO DE % - ONVIO/CHAMADO_______________________________________________________________        
 
-    def Onvio_chamadografico1(self,coluna,titulodografico,filtrotratativaonvio):
+    def Onvio_chamadografico1(self,coluna,titulodografico,filtrotratativaonvio,data):
         cardonvio = DadosOnvio()
-
+        
+        
         #PARA VINCULAR FILTRO TRATATIVA AO GRÁFICO
         if filtrotratativaonvio == "Todos":
-            card = cardonvio.groupby(["SITUAÇÃO"]).count().reset_index()
+            if data == "Todos":
+                card = cardonvio.groupby(["SITUAÇÃO"]).count().reset_index()
+            else:
+                card=cardonvio[(cardonvio["mes"]==data)]
+                card = card.groupby(["SITUAÇÃO"]).count().reset_index()
         else:
-            card = cardonvio[(cardonvio["TRATATIVA"]==filtrotratativaonvio)]
-            card = card.groupby(["SITUAÇÃO"]).count().reset_index()
+            if data == "Todos":
+                card = cardonvio[(cardonvio["TRATATIVA"]==filtrotratativaonvio)]
+                card = card.groupby(["SITUAÇÃO"]).count().reset_index()
+            else:
+                card = cardonvio[(cardonvio["TRATATIVA"]==filtrotratativaonvio)&
+                                 (cardonvio["mes"]==data)]
+                card = card.groupby(["SITUAÇÃO"]).count().reset_index()
+
 
         #OPÇÃO 1 DE GRÁFICO:
         #Graficopercentual1= px.pie(card, values="TRATATIVA", names="SITUAÇÃO",color_discrete_map={'Concluído':'lightcyan',
@@ -616,13 +628,23 @@ class apresentacao():
         return coluna.plotly_chart(Graficopercentual1, use_container_width = True)
         
     ###PARA O SEGUNDO GRÁFICO DE % - ONVIO/CHAMADO_______________________________________________________________        
-    def Onvio_chamadografico2(self,coluna, titulodografico,orientação,colunadataframe,filtrotratativaonvio): #filtrotratativaonvio):
+    def Onvio_chamadografico2(self,coluna, titulodografico,orientação,colunadataframe,filtrotratativaonvio,data): #filtrotratativaonvio):
         cardonvio = DadosOnvio()
         if filtrotratativaonvio == "Todos":
-            card = cardonvio.groupby(["TRATATIVA"]).count().reset_index()
+            if data == "Todos":
+                card = cardonvio.groupby(["TRATATIVA"]).count().reset_index()
+            else: 
+                card=cardonvio[(cardonvio["mes"]==data)]
+                card = card.groupby(["TRATATIVA"]).count().reset_index()
         else:
-            card = cardonvio[(cardonvio["TRATATIVA"]==filtrotratativaonvio)]
-            card = card.groupby(["SITUAÇÃO"]).count().reset_index()
+            if data == "Todos":
+                card = cardonvio[(cardonvio["TRATATIVA"]==filtrotratativaonvio)]
+                card = card.groupby(["SITUAÇÃO"]).count().reset_index()
+            else: 
+                card = cardonvio[(cardonvio["TRATATIVA"]==filtrotratativaonvio)&
+                                 (cardonvio["mes"]==data)]
+                card = card.groupby(["SITUAÇÃO"]).count().reset_index()
+
 
         Graficoonvio2 = go.Figure()
         Graficoonvio2.add_trace(go.Bar(
@@ -900,7 +922,7 @@ class apresentacao():
         #LEMBRETES = AO COLOCAR NO SENTIMENTO - "bad", "good", "neutral" - a cor e o ícone utilizado mudam
             cc = st.columns(3)
             with cc[0]:
-                hc.info_card(title='Admissão', content='O colaborador iniciará suas atividades depois de amanhã? Não se esqueça de nos enviar o pedido de Admissão com 24 horas de antecedência! #ajudeacontabilidade', sentiment='good', title_text_size = "1.7rem",content_text_size="1.3rem",)
+                hc.info_card(title='Admissão', content='O colaborador iniciará suas atividades depois de amanhã? Não se esqueça de nos enviar o pedido de dmissão com 24 horas de antecedência! #ajudeacontabilidade', sentiment='good', title_text_size = "1.7rem",content_text_size="1.3rem",)
             with cc[1]:
                 hc.info_card(title='Rescisão', content='Demitiu o colaborador? Lembrando que a partir desta data o relógio começa a contar e o pagamento deve ser feito 10 dias depois! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
             with cc[2]:
@@ -920,11 +942,6 @@ class apresentacao():
             colunatabelaata1, colunatabelaata2 = st.columns((1,0.01))
             self.Ata(colunatabelaata1)
 
-        
-
-
-
-
 
 #####FORMATAÇÃO DA PRIMEIRA PÁGINA - ONVIO/CHAMADO:____________________________________________________________              
         if choose == "Onvio/Chamados":  #Bloco de código Geral - tudo será dentro dele
@@ -932,7 +949,7 @@ class apresentacao():
                st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
             st.title('Solicitações de chamados no Onvio')  #Definição do título da página
             
-            filtroscolunasonvio1,filtroscolunasonvio2 = st.columns([1.5,0.01]) #definição de colunas para as próximas informações nesta página e tamanho (em pixel)
+            filtroscolunasonvio1,filtroscolunasonvio2 = st.columns([1,1]) #definição de colunas para as próximas informações nesta página e tamanho (em pixel)
 
         ###DEFINIÇÃO DE FILTROS - GERAL:____________________________________________________________
             ONVIO = DadosOnvio() #Criação de Dataframe. nomeado neste projeto como "GERAL" por ser o nome da página e assim facilitar na compreensão
@@ -940,15 +957,17 @@ class apresentacao():
             filtro_situação = np.append(["Todos"], filtro_situação) #"np.append" para adicionar algum item a ser filtrado devendo ser adicionado dentro de ["","",""]
             filtro_tratativa = ONVIO["TRATATIVA"].unique()  #Criação do filtro mês que será puxado na planilha nomeada como "sq_nome_servico", "unique()" irá remover toda a duplicata
             filtro_tratativa = np.append(['Todos'], filtro_tratativa) #"np.append" para adicionar algum item a ser filtrado devendo ser adicionado dentro de ["","",""]
+            filtro_data = ONVIO["mes"].unique()
+            filtro_data = np.append(["Todos"],filtro_data)
 
 
-            #with filtroscolunasonvio1: #posição do filtro de acordo com as colunas definidas anteriormente
-               # filtro_situaçãoonvio = st.selectbox( #novo dataframe para o pacote de filtro
-                #    "Escolha a situação", #nome/frase que identificará o filtro 
-                #    filtro_situação, #objeto/variável
-                 #   help="A incluir", #mensagem de suporte
-                  #  key= "filtrosituaçãoonvio", #nome do filtro
-                  #  index = 0) #ele irá selecionar o item n° x da lista
+            with filtroscolunasonvio2: #posição do filtro de acordo com as colunas definidas anteriormente
+                filtro_dataonvio = st.selectbox( #novo dataframe para o pacote de filtro
+                    "Escolha a data", #nome/frase que identificará o filtro 
+                    filtro_data, #objeto/variável
+                    help="A incluir", #mensagem de suporte
+                    key= "filtrodataonvio", #nome do filtro
+                    index = 0) #ele irá selecionar o item n° x da lista
             
             with filtroscolunasonvio1: #posição do filtro de acordo com as colunas definidas anteriormente
                 filtro_tratativaonvio = st.selectbox( #novo dataframe para o pacote de filtro
@@ -958,7 +977,6 @@ class apresentacao():
                     index= 0, #ele irá selecionar o item n° x da lista
                     key= "filtrotratativaonvio",) #nome do filtro
                 
-
 
     ###CHAMADOR DE FUNÇÕES - GERAL:____________________________________________________________
             ColunageralA, ColunageralB, ColunageralC,ColunageralD,ColunageralE = st.columns((1,1,1,1,1))
@@ -979,14 +997,16 @@ class apresentacao():
 
             GraficoonviogeralA,GraficoonviogeralB = st.columns((1,0.01))
             self.Onvio_chamadografico1(GraficoonviogeralA, titulodografico= "Percentual de Chamados",
-                                       filtrotratativaonvio=filtro_tratativaonvio) 
+                                       filtrotratativaonvio=filtro_tratativaonvio,
+                                       data=filtro_dataonvio) 
             
             GraficoonviogeralC, GraficoonviogeralD = st.columns((1,0.01))
             self.Onvio_chamadografico2(GraficoonviogeralC, 
                                        colunadataframe= "TRATATIVA",
                                        orientação= "h",
                                        titulodografico= "Quantidade de tratativas",
-                                        filtrotratativaonvio=filtro_tratativaonvio)
+                                        filtrotratativaonvio=filtro_tratativaonvio,
+                                        data=filtro_dataonvio)
                                        
 #####FORMATAÇÃO DA PRIMEIRA SEGUNDA - ADMISSÃO:____________________________________________________________   
         elif choose == "Admissão":
@@ -1149,7 +1169,7 @@ class apresentacao():
             self.Graficoevolucaomensalrescisao(colgraficorescisao1,
                                            colunadataframe='sq_dataini',
                                            orientação= "v",
-                                           titulodografico="Controle Mensal de Rescisões",
+                                           titulodografico="Quantidade Mensal de Rescisões",
                                            filtroserviçorescisao=filtrorescisao_serviço1,
                                            filtrocentrodecustorescisao=filtrorescisao_centrodecusto1)
             
