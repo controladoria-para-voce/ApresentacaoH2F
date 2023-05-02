@@ -111,15 +111,26 @@ class apresentacao():
         return coluna.plotly_chart(Tabelaata, use_container_width=True)
         
 #####FUNÇÃO RÚBRICAS:_____________________________________________________________________________
-    def Rubricasdafolha(self, coluna, titulodografico, filtrodata, filtromodelo):
+    def Rubricasdafolha(self, coluna, titulodografico, filtrodata, filtromodelo,filtrorubrica):
         cardrubricas = DadosRubricas()
-        print(cardrubricas)
+        
         if filtromodelo == "Todos":
             if filtrodata == "Todos":
-                card = cardrubricas.groupby(["cp3_nome_evento"]).sum().reset_index()
+                card = cardrubricas.groupby(["cp2_prov_desc"]).count().reset_index()
             else: 
                 card = cardrubricas([cardrubricas["mes"]==filtrodata])
+                card = cardrubricas.groupby(["cp2_prov_desc"]).count().reset_index()
+        else: 
+            if filtrodata == "Todos":
+                card = cardrubricas[(cardrubricas["cp3_nome_evento"] == filtromodelo)]
+                card = card.groupby(["cp2_prov_desc"]).count().reset_index()
+            else: 
+                card = cardrubricas[(cardrubricas["cp3_nome_evento"]== filtromodelo)&
+                                    (cardrubricas["mes"]==filtrodata)]
+                card = card.groupby(["cp2_prov_desc"]).count().reset_index()
+
         
+
 
 
 #####FUNÇÃO FÉRIAS:_____________________________________________________________________________
@@ -992,10 +1003,10 @@ class apresentacao():
                     key= "filtrotratativaonvio",) #nome do filtro
                 
 
-    ###CHAMADOR DE FUNÇÕES - GERAL:____________________________________________________________
+    ###CHAMADOR DE FUNÇÕES - ONVIO/CHAMADOS:____________________________________________________________
             ColunageralA, ColunageralB, ColunageralC,ColunageralD,ColunageralE = st.columns((1,1,1,1,1))
             
-        ###CHAMADOR DE FUNÇÕES - CARD GERAL:____________________________________________________________
+        ###CHAMADOR DE FUNÇÕES - CARD ONVIO/CHAMADOS:____________________________________________________________
             ColunageralA.metric(label="Aguardando o Cliente", value=self.Onvio_chamadoscard(filtrotratativaonvio=filtro_tratativaonvio,
                                                                                 SITUAÇÃO="Aguardando o cliente"))
             ColunageralB.metric(label="Aguardando Resposta", value=self.Onvio_chamadoscard(filtrotratativaonvio=filtro_tratativaonvio,
@@ -1007,7 +1018,7 @@ class apresentacao():
             ColunageralE.metric(label="Concluído", value=self.Onvio_chamadoscard(filtrotratativaonvio=filtro_tratativaonvio,
                                                                                 SITUAÇÃO="Concluído"))
 
-    ###CHAMADOR DE FUNÇÕES - GRÁFICO 1,2 e 3 GERAL:____________________________________________________________
+    ###CHAMADOR DE FUNÇÕES - GRÁFICO 1,2 e 3 ONVIO/CHAMADOS:____________________________________________________________
 
             GraficoonviogeralA,GraficoonviogeralB = st.columns((1,0.01))
             self.Onvio_chamadografico1(GraficoonviogeralA, titulodografico= "Percentual de Chamados",
@@ -1026,23 +1037,32 @@ class apresentacao():
         if choose == "Rúbricas":
             with open('style.css') as f:
                 st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html= True)
-            st.title("Resumo de Rúbricas")
+            st.title("Resumo de Rúbricas:")
             
             filtrorubricacoluna1,filtrorubricacoluna2 = st.columns([1,1])
 
         ###DEFINIÇÃO DE FILTROS - RUBRICAS:____________________________________________________________
             RUBRICA = DadosRubricas()
-            Filtro_datar= RUBRICA["mes"].unique()
-            Filtro_datar = np.append(["Todos"],Filtro_datar) 
+            filtro_datar= RUBRICA["mes"].unique()
+            filtro_datar = np.append(["Todos"],filtro_datar)
+            filtro_modelo = RUBRICA["cp2_prov_desc"].unique()
+            filtro_modelo = np.append(["Todos"],filtro_modelo)
 
             with filtrorubricacoluna1:
                 filtrodatarubrica = st.selectbox(
                     "Escolha a data",
-                    Filtro_datar,
+                    filtro_datar,
                     help = "A Incluir",
                     key = "Filtro de data",
                     index= 0)
-        
+                
+            with filtrorubricacoluna2:
+                filtromodelorubrica = st.selectbox(
+                    "Escolha o modelo",
+                    filtro_modelo,
+                    help = "A Incluir",
+                    key = "Filtro de modelo",
+                    index= 0)
 
 
 #####FORMATAÇÃO DA PRIMEIRA SEGUNDA - ADMISSÃO:____________________________________________________________   
