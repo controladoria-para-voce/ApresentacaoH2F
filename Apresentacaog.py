@@ -965,7 +965,7 @@ class apresentacao():
             
             filtroscolunasonvio1,filtroscolunasonvio2 = st.columns([1,1]) #definição de colunas para as próximas informações nesta página e tamanho (em pixel)
 
-        ###DEFINIÇÃO DE FILTROS - GERAL:____________________________________________________________
+        ###DEFINIÇÃO DE FILTROS - ONVIO/CHAMADO:____________________________________________________________
             ONVIO = DadosOnvio() #Criação de Dataframe. nomeado neste projeto como "GERAL" por ser o nome da página e assim facilitar na compreensão
             filtro_situação = ONVIO["SITUAÇÃO"].unique()  #Criação do filtro mês que será puxado na planilha nomeada como "sq_dataini", "unique()" irá remover toda a duplicata
             filtro_situação = np.append(["Todos"], filtro_situação) #"np.append" para adicionar algum item a ser filtrado devendo ser adicionado dentro de ["","",""]
@@ -1028,6 +1028,20 @@ class apresentacao():
                 st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html= True)
             st.title("Resumo de Rúbricas")
             
+            filtrorubricacoluna1,filtrorubricacoluna2 = st.columns([1,1])
+
+        ###DEFINIÇÃO DE FILTROS - RUBRICAS:____________________________________________________________
+            RUBRICA = DadosRubricas()
+            Filtro_datar= RUBRICA["mes"].unique()
+            Filtro_datar = np.append(["Todos"],Filtro_datar) 
+
+            with filtrorubricacoluna1:
+                filtrodatarubrica = st.selectbox(
+                    "Escolha a data",
+                    Filtro_datar,
+                    help = "A Incluir",
+                    key = "Filtro de data",
+                    index= 0)
         
 
 
