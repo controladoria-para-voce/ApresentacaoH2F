@@ -26,6 +26,22 @@ def DadosRescisao():
 @st.cache_data
 def DadosAdmissao():
     base_admissao = pd.read_excel(r"Admissões jan-mar.xlsx")
+    
+    excluir = ["i_empregados", "situacao"] #PARA EXCLUIR DA APRESENTAÇÃO UMA DETERMINADA COLUNA
+    for i in excluir:
+        base_admissao.drop(columns = i, inplace= True)
+
+    #base_admissao["salario"] = base_admissao["salario"].map("R${:,.2f}".format) #PARA ALTERAR O FORMATO DO VALOR, COLOCANDO R$
+    #base_admissao.loc[:,base_admissao.columns.isin(["nome","salario"])]  #edição da tabela de admissao
+    
+    Ordemcorreta = ["nome_quebra", "nome", "nome_cargo","admissao","salario"] #PARA INSERIR A ORDEM DE COLUNAS DESEJADA 
+    base_admissao = base_admissao[Ordemcorreta]
+
+   # base_admissao.rename(columns={"nome_quebra": "Contrato/Serviço"}, inplace=True)
+    #base_admissao.rename(columns={"nome": "Colaborador"}, inplace=True)
+   # base_admissao.rename(columns={"nome_cargo": "Cargo"}, inplace=True)
+    #base_admissao.rename(columns={"admissao": "Data de Contratação"}, inplace=True)
+    #base_admissao.rename(columns={"salario": "Salário"}, inplace=True)
     return base_admissao
 
 @st.cache_data
@@ -54,8 +70,24 @@ def DadosAta():
 @st.cache_data
 def DadosRubricas():
     base_rubrica = pd.read_excel(r"Rubricas Utilizadas Jan-Mar.xlsx")
-    base_rubrica['mes'] = base_rubrica["cp_competencia"].dt.to_period("M").dt.strftime('%m/%Y')
+    base_rubrica.dropna() #para retirar as linhas em branco "ex.: null"
+
+    #base_rubrica.loc[:,~base_rubrica.columns.isin(["Data","Tipo", "Rubricas Utilizadas","Valor"])]  #edição da tabela de admissao
+
     return base_rubrica
+
+@st.cache_data
+def DadosAtivos():
+    base_ativos = pd .read_excel(r"Colab Ativos jan-mar.xlsx")
+    base_ativos["Competencia"] = pd.to_datetime(base_ativos["Competencia"],format="%d/%m/%Y") #alterar o formato da data
+    base_ativos["Competência"]= base_ativos["Competencia"].dt.to_period("d").dt.strftime("%d/%m/%Y")
+
+    base_ativos["Líquido Geral"] = base_ativos["Líquido Geral"].map("R${:,.2f}".format) #PARA ALTERAR O FORMATO DO VALOR, COLOCANDO R$
+    st.subheader("Custo Total da Folha de Pagamento:")   
+    base_ativos.loc[:,~base_ativos.columns.isin(["Competencia","Ativos"])]  #edição da tabela de admissao
+
+    
+    return base_ativos
 
 class apresentacao():
 ###PARA SUBIR AS IMAGENS:_______________________________________________________________
@@ -111,27 +143,95 @@ class apresentacao():
         return coluna.plotly_chart(Tabelaata, use_container_width=True)
         
 #####FUNÇÃO RÚBRICAS:_____________________________________________________________________________
-    def Rubricasdafolha(self, coluna, titulodografico, filtrodata, filtromodelo,filtrorubrica):
+    def cardrubricas1(self,filtrodata,filtromodelo):
+        cardrubrica1 = DadosRescisao()
+
+        if filtrodata == "Todos":
+            card = cardrubrica1[cardrubrica1["cp3_nome_evento"]==filtromodelo]
+            
+        else: 
+            card = cardrubrica1[(cardrubrica1["cp3_nome_evento"]==filtromodelo)&
+                                (cardrubrica1["cp_competencia"]==filtrodata)]
+            
+            card = card["cp3_valor_calc"].sum()
+
+            card_4 = f"R$ {card:,.0f}"
+            card_4= card_4.replace(",",".")
+            return card_4
+    
+    def Rubricasdafolha(self,  filtrodata, filtromodelo,filtrorubrica):
         cardrubricas = DadosRubricas()
         
         if filtromodelo == "Todos":
             if filtrodata == "Todos":
-                card = cardrubricas.groupby(["cp2_prov_desc"]).count().reset_index()
+                card = cardrubricas.groupby(["cp3_valor_calc"]).sum().reset_index()
             else: 
-                card = cardrubricas([cardrubricas["mes"]==filtrodata])
-                card = cardrubricas.groupby(["cp2_prov_desc"]).count().reset_index()
+                card = cardrubricas([cardrubricas["cp_competencia"]==filtrodata])
+                card = cardrubricas.groupby(["cp3_valor_calc"]).sum().reset_index()
         else: 
             if filtrodata == "Todos":
                 card = cardrubricas[(cardrubricas["cp3_nome_evento"] == filtromodelo)]
-                card = card.groupby(["cp2_prov_desc"]).count().reset_index()
+                card = card.groupby(["cp3_valor_calc"]).sum().reset_index()
             else: 
                 card = cardrubricas[(cardrubricas["cp3_nome_evento"]== filtromodelo)&
-                                    (cardrubricas["mes"]==filtrodata)]
-                card = card.groupby(["cp2_prov_desc"]).count().reset_index()
+                                    (cardrubricas["cp_competencia"]==filtrodata)]
+                card = card.groupby(["cp3_valor_calc"]).sum().reset_index()
+        if filtrorubrica == "Todos":
+            pass
+        else:
+            if filtrorubrica == "Proventos":
+                A = "P"
+            else:
+                A = "D"
+            cardrubricas = cardrubricas[cardrubricas["cp2_prov_desc"]==A]
+           
+    def tabelarubrica (self, coluna,filtrorubrica,filtrodatarubrica):
+        cardrubricas = DadosRubricas()
 
+        cardrubricas["cp3_valor_calc"] = cardrubricas["cp3_valor_calc"].map("R${:,.2f}".format) #PARA ALTERAR O FORMATO DO VALOR, COLOCANDO R$
         
+        if filtrorubrica == "Todos":
+            pass
+        else:
+            if filtrorubrica == "Proventos":
+                A = "P"
 
+            else:
+                A = "D"   
+            
+            cardrubricas = cardrubricas[cardrubricas["cp2_prov_desc"]==A]
+      
+        cardrubricas.rename(columns={'cp_competencia': 'Data'}, inplace = True)
+        cardrubricas.rename(columns={'cp2_prov_desc': 'Tipo'}, inplace = True)
+        cardrubricas.rename(columns={'cp3_nome_evento': 'Rubricas Utilizadas'}, inplace = True)
+        cardrubricas.rename(columns={'cp3_valor_calc': 'Valor'}, inplace = True)
+        
+        tabelarubrica = go.Figure(
+                                data = [go.Table(
+                                                header = dict(
+                                                            values = list(cardrubricas.columns),
+                                                            font = dict(
+                                                                        size = 14, color = "rgba(3,102,102,1)", family = "Arial Black, monospace"),
+                                                            line_color = "rgba(153,226,180,1)",
+                                                            align = ["center", "center"],
+                                                            height = 30),
 
+                                                cells = dict(
+                                                            values = [cardrubricas[k].tolist() for k in cardrubricas.columns],
+                                                            font = dict(size = 14, color = "Black", family = "Arial, monospace"),
+                                                            align = ["left", "center"],
+                                                            line_color = "rgba(153,226,180,1)",
+                                                            
+                                                            #format = [".2$"],
+                                                            height = 30)           
+                                                )])
+        tabelarubrica.update_layout( 
+                                    height = 800,
+                                    width = 1800)
+        tabelarubrica.update_layout(xaxis = dict(
+                                                rangeslider = dict(
+                                                                    visible = True)))
+        return coluna.plotly_chart(tabelarubrica,use_container_width = True)
 
 #####FUNÇÃO FÉRIAS:_____________________________________________________________________________
     ###PARA CRIAÇÃO DE CARD VALOR TOTAL - FÉRIAS:_______________________________________________________________
@@ -405,7 +505,7 @@ class apresentacao():
 
 
     ###PARA O PRIMEIRO GRÁFICO DE QTD MENSAL - ADMISSÃO:_______________________________________________________________        
-    def Graficoevolucaomensaladmissao(self, coluna, colunadataframe, orientação, titulodografico,filtroadmissaomês, filtroadmissaoservico,filtroadmissaocargo):
+    def Graficoevolucaomensaladmissao(self, coluna, colunadataframe, orientação, titulodografico, filtroadmissaoservico,filtroadmissaocargo):
         cardadmissao = DadosAdmissao()
         if filtroadmissaoservico == "Todos":
             if filtroadmissaocargo == "Todos":
@@ -460,40 +560,41 @@ class apresentacao():
         return coluna.plotly_chart(graficoevolucaomensaladmissao, use_container_width = True)
     
     ###PARA O SEGUNDO GRÁFICO DE COLABORADORES ATIVOS - ADMISSAO:_______________________________________________________________
-    def Graficoadmissaoativos(self,coluna,colunadataframe,orientação,titulodografico,filtroadmissaomês,filtroadmissaosituacao8):
-        cardadmissao = DadosAdmissao()
+    
+    def Graficoadmissaoativos(self,coluna,colunadataframe,orientação,titulodografico):
+            cardadmissao = DadosAtivos()
         #print(cardadmissao.dtypes)
-        if filtroadmissaosituacao8 == "Todos":
-            pass 
+            '''if filtroadmissaosituacao8 == "Todos":
+                pass 
        
-        else:
-            if filtroadmissaosituacao8 == "Ativo":
-                A = 8 
-            else: 
-                A = 1 
-            cardadmissao = cardadmissao[cardadmissao["situacao"]==A]
+            else:
+                if filtroadmissaosituacao8 == "Ativo":
+                    A = 8 
+                else: 
+                    A = 1 
+            cardadmissao = cardadmissao[cardadmissao["situacao"]==A]'''
             #print(cardadmissao)
             #print(f"deu certo {filtroadmissaosituacao8}")
             #print(filtroadmissaosituacao8=="1")
 
-        cardadmissao = cardadmissao[["nome","situacao","admissao"]]
-        cardadmissao["admissao"] = pd.to_datetime(cardadmissao["admissao"],format="%d/%m/%Y")
+            card = cardadmissao[["Empresa","Ativos","Competencia"]]
+            #cardadmissao["Competencia"] = pd.to_datetime(cardadmissao["Competencia"],format="%d/%m/%Y")
         
-        card = cardadmissao.groupby([pd.Grouper(key="admissao",freq= "M", axis=0)]).count().reset_index()
+            #card = cardadmissao.groupby([pd.Grouper(key="Competencia",freq= "M", axis=0)]).count().reset_index()
 
-        Graficoadmissaoativos = go.Figure()
-        Graficoadmissaoativos.add_trace(go.Bar(
+            Graficoadmissaoativos = go.Figure()
+            Graficoadmissaoativos.add_trace(go.Bar(
                                                 x = card[colunadataframe],
-                                                y = card["situacao"],
+                                                y = card["Ativos"],
                                                 marker= dict(
                                                             color = "rgba(0,146,122,1)",
                                                             line = dict(
                                                                         color = "rgba(0,146,122,0)",
                                                                         width = 1),),
                                                 name = "Graficoadmissao_2",
-                                                text = card["nome"],
+                                                text = card["Ativos"],
                                                 orientation= orientação))
-        Graficoadmissaoativos.update_layout(
+            Graficoadmissaoativos.update_layout(
                                             autosize = False, 
                                             width = 100,
                                             height = 400,
@@ -508,50 +609,109 @@ class apresentacao():
                                                         color = "rgba(0,0,0,1)")
         )
 
-        Graficoadmissaoativos.update_traces(textposition = "inside")
+            Graficoadmissaoativos.update_traces(textposition = "inside")
 
-        return coluna.plotly_chart(Graficoadmissaoativos, use_container_width= True)
+            return coluna.plotly_chart(Graficoadmissaoativos, use_container_width= True)
+
 
 
     ###PARA O TERCEIRO GRÁFICO DE CARGOS - ADMISSAO:_______________________________________________________________
     def Graficocargoadmissao(self,coluna, colunadataframe,orientação,titulodografico,filtromêsadmissao):
         cardadmissao = DadosAdmissao()
-
+        print(cardadmissao.dtypes)
         if filtromêsadmissao == "Todos":
             card = cardadmissao.groupby([colunadataframe]).sum("salario").reset_index()
         else: 
             card = cardadmissao[cardadmissao["salario"]==filtromêsadmissao]
             card = card.groupby([colunadataframe]).sum("salario").reset_index()
 
-        graficoadmissao1= go.Figure()
+        tabelaadmissao2 = go.Figure(
+                                    data = [go.Table(
+                                                    header = dict(
+                                                                values = list(cardadmissao.columns),
+                                                                font = dict(
+                                                                            size = 14, color = "rgba(3,102,102,1)", family = "Arial Black, monospace"),
+                                                                line_color = "rgba(153,226,180,1)",
+                                                                height = 30),
+                                                    cells = dict(
+                                                                values = [cardadmissao[k].tolist() for k in cardadmissao.columns],
+                                                                font = dict( size = 14, color = "Black", family = "Arial, monospace"),
+                                                                align = ["left", "center"],
+                                                                line_color = "rgba(153,226,180,1)",
+                                                                height = 30)
+                                                                )])
+        tabelaadmissao2.update_layout(
+                                    height= 800, 
+                                    width = 1800,
+                                    xaxis = dict(
+                                                rangeslider = dict(
+                                                                    visible = True)))
+            
+        cardadmissao["salario"] = cardadmissao["salario"].map("R${:,.0f}".format)
+        cardadmissao["salario"] = cardadmissao["salario"].str.replace(",",".")
+        
+        
+        return coluna.plotly_chart(tabelaadmissao2, use_container_width = True)
 
-        graficoadmissao1.add_trace(go.Bar(
-                                        x = card["salario"],
-                                        y= card [colunadataframe],
-                                        marker = dict(
-                                                    color = "rgba(0,146,122,1)",
-                                                    line = dict(
-                                                                color = "rgba(0,146,122,0)",
-                                                                width = 1),),
-                                        name = "graficoadmissao1",
-                                        text = (card["salario"].map("R$ {:,.0f}".format)).str.replace(",","."),
-                                        orientation= orientação))
-        graficoadmissao1.update_layout(
-                                    autosize = False,
-                                    width = 400,
-                                    height = 700,
-                                    barmode = "stack",
-                                    yaxis = {"categoryorder":"total ascending"},
-                                    title = {"text" : titulodografico,
-                                             "y":1, "x":0.5,
-                                             "yanchor":"top",
-                                             "xanchor": "center"},
-                                    font = dict(size = 15,
-                                                family = "Arial Black, monospace",
-                                                color = "rgba(0,0,0,1)") )
-        graficoadmissao1.update_traces(textposition = "outside")
+
+
+
+
+
+
 
         return coluna.plotly_chart(graficoadmissao1, use_container_width = True)
+
+    ###PARA TESTE DO QUARTA TABELA DE TOTAL DA FOLHA - ADMISSAO:_______________________________________________________________
+    def testeterceiroadmissao(self, coluna, filtromêsadmissao ):
+        cardadmissao = DadosAtivos()
+
+        '''if filtromêsadmissao == "Todos":
+            card = cardadmissao.groupby(["Ativos"]).sum("Líquido Geral").reset_index()
+        else: 
+            card = cardadmissao[cardadmissao["Líquido Geral"]==filtromêsadmissao]
+            card = card.groupby(["Ativos"]).sum("Líquido Geral").reset_index()'''
+
+        #cardadmissao["Líquido Geral"] = cardadmissao["Líquido Geral"].map("R${:,.2f}".format) #PARA ALTERAR O FORMATO DO VALOR, COLOCANDO R$
+
+        cardadmissao.rename(columns={"nome_quebra": "Contrato/Serviço"}, inplace=True)
+        cardadmissao.rename(columns={"nome": "Colaborador"}, inplace=True)
+        cardadmissao.rename(columns={"nome_cargo": "Cargo"}, inplace=True)
+        cardadmissao.rename(columns={"admissao": "Data de Contratação"}, inplace=True)
+        cardadmissao.rename(columns={"salario": "Salário"}, inplace=True)
+
+        tabelaadmissao = go.Figure(
+                                   data = [go.Table(
+                                                    header=dict(
+                                                                values = list(cardadmissao.columns),
+                                                                font = dict(
+                                                                            size = 14, 
+                                                                            color = "rgba(3,102,102,1)",
+                                                                            family = "Arial Black, monospace"),
+                                                                line_color = "rgba(153,226,180,1)",
+                                                                align = ["center","center"],
+                                                                height = 30),
+                                                    cells = dict(
+                                                                values = [cardadmissao[k].tolist() for k in cardadmissao.columns],
+                                                                font = dict(size = 14,
+                                                                            color = "black",
+                                                                            family = "Arial, monospace"),
+                                                                align = ["left", "center"],
+                                                                line_color = "rgba(153,226,180,1)",
+                                                                height = 30))])
+        tabelaadmissao.update_layout(
+                                    height = 800,
+                                    width = 1800)
+        tabelaadmissao.update_layout(xaxis = dict(
+                                                    rangeslider = dict(
+                                                                        visible = True)))
+        
+        return coluna.plotly_chart(tabelaadmissao, use_container_width = True)
+        
+                                
+
+
+
 
 
 #####FUNÇÃO PARA ONVIO/CHAMADOS:____________________________________________________________
@@ -1034,43 +1194,93 @@ class apresentacao():
                                         data=filtro_dataonvio)
 
 ###FORMATAÇÃO DA TERCEIRA PÁGINA - RUBRICAS:____________________________________________________________ 
-        if choose == "Rúbricas":
+        if choose == "Rubricas":
             with open('style.css') as f:
                 st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html= True)
-            st.title("Resumo de Rúbricas:")
+            st.title("Resumo de Rubricas:")
             
-            filtrorubricacoluna1,filtrorubricacoluna2 = st.columns([1,1])
+            filtrorubricacoluna1,filtrorubricacoluna2= st.columns([1,1])
 
         ###DEFINIÇÃO DE FILTROS - RUBRICAS:____________________________________________________________
             RUBRICA = DadosRubricas()
-            filtro_datar= RUBRICA["mes"].unique()
+            filtro_datar= RUBRICA["cp_competencia"].unique()
             filtro_datar = np.append(["Todos"],filtro_datar)
-            filtro_modelo = RUBRICA["cp2_prov_desc"].unique()
-            filtro_modelo = np.append(["Todos"],filtro_modelo)
+           #filtro_modelo = RUBRICA["cp3_nome_evento"].unique()
+            #filtro_modelo = np.append(["Todos"],filtro_modelo)
+            filtro_rubrica =  ["Todos","Proventos","Desconto"]
+            #fvalor = RUBRICA["cp3_valor_calc"].unique()
+            #fvalor = np.append(["Todos"],fvalor)
+            
+             
 
             with filtrorubricacoluna1:
                 filtrodatarubrica = st.selectbox(
-                    "Escolha a data",
-                    filtro_datar,
-                    help = "A Incluir",
-                    key = "Filtro de data",
-                    index= 0)
+                "Escolha a data",
+                filtro_datar,
+                help = "A Incluir",
+                key = "Filtro de data",
+                index= 0)
                 
+            
+            
             with filtrorubricacoluna2:
-                filtromodelorubrica = st.selectbox(
-                    "Escolha o modelo",
-                    filtro_modelo,
-                    help = "A Incluir",
-                    key = "Filtro de modelo",
-                    index= 0)
+                filtrorubricarubrica = st.selectbox(
+                    "Escolha a situação",
+                    filtro_rubrica,
+                    help= "A Incluir",
+                    key = "filtro rubrica",
+                    index=0)
+            
+            #with filtrorubricacoluna3:
+             #   filtromodelorubrica = st.selectbox(
+              #      "Escolha a situação",
+               #     filtro_modelo,
+              #      help= "A Incluir",
+               #     key = "Filtro de modelo",
+               #     index=0)
 
+###CHAMADOR DE FUNÇÕES - rubricas:____________________________________________________________
+        ###CHAMADOR DE FUNÇÕES - CARD Rubricas:____________________________________________________________
+            #colunacardrubricaA,colunacardrubricaB,colunacardrubricaC = st.columns((1,1,1))
+            '''colunacardrubricaA.metric(label= "valor", value = self.cardrubricas1(
+                                                                                 filtrodata = filtrodatarubrica,
+                                                                                 filtromodelo= filtromodelorubrica))'''
+
+
+            #colunacardrubricaA.metric(label= "SALÁRIO FIXO", value = self.cardrubricas(,
+                                                                                       #filtrovalor= "SALÁRIO FIXO"))
+            
+###CHAMADOR DE FUNÇÕES - GRÁFICO 1,2 e 3 rubricas:____________________________________________________________
+#obs.: gáfico horizontal - total
+           # graficocoluna1,graficocoluna2,graficocoluna3 = st.columns((1,0.01))
+            #self.Graficorubrica1(graficocoluna1,
+                                 #colunadataframe="cp3_nome_evento",
+                                 #orientação= "h",
+                                 #titulodografico= "rubricas",
+                                 #filtrorubrica= filtrorubricarubrica,
+                                 #filtrodata=filtrodatarubrica
+                                #)
+            graficocoluna0,graficocoluna2,graficocoluna3 = st.columns((0.2,1,0.01))
+
+#obs.: tabela - total
+            with graficocoluna2:
+                graficocoluna2.title("Rubricas da Folha de Pagamento")
+            
+            graficocoluna1,graficocoluna12 = st.columns((1,0.01))
+
+            self.tabelarubrica(graficocoluna1, 
+                               filtrorubrica = filtrorubricarubrica,
+                                filtrodatarubrica = filtrodatarubrica)
+
+
+        
 
 #####FORMATAÇÃO DA PRIMEIRA SEGUNDA - ADMISSÃO:____________________________________________________________   
         elif choose == "Admissão":
                 with open('style.css') as f:
                     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
                 st.title("Resumo de Admissões")
-                filtrosadmissaocoluna1,filtrosadmissaocoluna2,filtrosadmissaocoluna3,filtrosadmissaocoluna4 = st.columns([1.5,1.5,1.5,1.5])
+                filtrosadmissaocoluna1,filtrosadmissaocoluna2,filtrosadmissaocoluna3,filtroadmissaocoluna4 = st.columns([1.5,1.5,1.5,1.5])
         
         ###DEFINIÇÃO DE FILTROS - ADMISSÃO:____________________________________________________________
         ###CHAMADOR DE FUNÇÕES - CARD valor total ADMISSAO:____________________________________________________________
@@ -1092,15 +1302,15 @@ class apresentacao():
                                                   key= "Admissão_1",
                                                   index= 0)
 
-                with filtrosadmissaocoluna2:
+                with filtroadmissaocoluna4:
                     filtroadmissao_serviço1 = st.selectbox(
                                                    "Esolha o Serviço",
                                                     filtroadmissao_serviço,
                                                     help = "A incluir",
                                                    key= "Admissão_2",
-                                                    index=0)                   
+                                                    index=0)              
 
-                with filtrosadmissaocoluna3:
+                with filtrosadmissaocoluna2:
                     filtroadmissao_cargo1 = st.selectbox(
                                                         "Escolha o cargo",
                                                         filtroadmissao_cargo,
@@ -1108,7 +1318,7 @@ class apresentacao():
                                                         key = "Admissão_3",
                                                         index=0)
                     
-                with filtrosadmissaocoluna4:
+                with filtrosadmissaocoluna3:
                     filtroadmissao_ativos8 = st.selectbox(
                                                         "Escolha a situacao",
                                                         filtroadmissao_ativos,
@@ -1135,17 +1345,23 @@ class apresentacao():
                                            orientação= "v",
                                            titulodografico= "Quantidade Mensal de Admissões",
                                             filtroadmissaoservico =  filtroadmissao_serviço1,
-                                            filtroadmissaocargo = filtroadmissao_cargo1,
-                                            filtroadmissaomês=  filtroadmissao_mês1 )
+                                            filtroadmissaocargo = filtroadmissao_cargo1,)
+                                            #filtroadmissaomês=  filtroadmissao_mês1 )
 
 #obs.: gáfico vertical - ativos
                 GraficoativosadmissaoA,GraficoativosadmissaoB = st.columns((0.01,1))
                 self.Graficoadmissaoativos(GraficoativosadmissaoB,
-                                           colunadataframe="admissao",
+                                           colunadataframe="Competencia",
                                            orientação= "v",
-                                           titulodografico= "Colaboradores Ativos",
-                                           filtroadmissaosituacao8=filtroadmissao_ativos8,
-                                           filtroadmissaomês=filtroadmissao_mês1)
+                                           titulodografico= "Colaboradores Ativos - H2F",)
+                                           #filtroadmissaosituacao8=filtroadmissao_ativos8,)
+                                           #filtroadmissaomês=filtroadmissao_mês1)
+               # GraficoativosadmissaoC,GraficoativosadmissaoD = st.columns((0.01,1))
+                #self.testeterceiroadmissao(GraficoativosadmissaoD,
+                                           
+                            #               filtromêsadmissao = filtroadmissao_mês1)
+                                           #filtroadmissaosituacao8=filtroadmissao_ativos8,)
+                                           #filtroadmissaomês=filtroadmissao_mês1)                          
 
 #obs.: gáfico horizontal - Cargo
                 GraficocargoadmissaoA,GraficocargoadmissaoB = st.columns((1,0.01))

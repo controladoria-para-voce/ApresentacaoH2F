@@ -133,7 +133,7 @@ class base_dados():
         self.base_rubricas = pd.DataFrame() #Criação de um Data Frame fazio - tudo será dentro deste data frame vazio - o self no início é um parametro em geral para ser repetido dentro da classe
         listadearquivos_rubricas= os.listdir(self.caminho_rubricas) #acessar todos os arquivos do diretório/pasta
         for i in listadearquivos_rubricas:
-            dataframe_basetemporariar = pd.read_excel(self.caminho_rubricas + "\\"+ i, usecols= ["cp2_prov_desc","cp3_codigo_evento", "cp3_nome_evento", "cp3_valor_calc","cp_competencia"]) # o data frame temporário irá ler os arquivos na pasta indicada acima atraves do "self.caminho...." + as barras servem para anular as \ no endereço/caminho da pasta, substituindo o 1° pelo 2° + i que indica a lista de arquivos que ele irá concatenar, usecols [ para identificar as colunas que serão utilizadas]
+            dataframe_basetemporariar = pd.read_excel(self.caminho_rubricas + "\\"+ i, usecols= ["cp2_prov_desc", "cp3_nome_evento", "cp3_valor_calc","cp_competencia"]) # o data frame temporário irá ler os arquivos na pasta indicada acima atraves do "self.caminho...." + as barras servem para anular as \ no endereço/caminho da pasta, substituindo o 1° pelo 2° + i que indica a lista de arquivos que ele irá concatenar, usecols [ para identificar as colunas que serão utilizadas]
             self.base_rubricas = pd.concat([self.base_rubricas, dataframe_basetemporariar]) #irá unir/concatenar todas as planilhas da pasta, transformando tudo em uma única planilha - ([base antiga, base temporaria pós leitura das planilhas])
 
     #LIMPEZA DA PLANILHA:
@@ -143,6 +143,14 @@ class base_dados():
        # Colunasplanilhaextratos= [""]
         #self.base_rubricas.drop_duplicates(subset=["cp3_codigo_evento", "cp3_nome_evento"])
         #self.base_rubricas.drop(index=1, inplace=True)
+        '''base_rubricas = list(self.base_rubricas)
+        for i in base_rubricas: 
+            base_rubricas[i]= self.transformar_moeda(base_rubricas, i, "cp3_valor_calc")
+            base_rubricas[i]=base_rubricas[i].replace('R$ nan', "R$ -")'''
+
+
+
+        #self.base_rubricas.dropna(subset=["cp3_nome_evento", "cp3_valor_calc", "cp2_prov_desc"], inplace=True) 
 
         self.base_rubricas.to_excel("Rubricas Utilizadas Jan-Mar.xlsx", index=False)
      
