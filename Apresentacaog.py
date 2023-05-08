@@ -1364,6 +1364,12 @@ class apresentacao():
                                            #filtroadmissaomês=filtroadmissao_mês1)                          
 
 #obs.: gáfico horizontal - Cargo
+                
+                colunatitulo1, colunatitulo2,colunatitulo3 = st.columns((0.2,1,0.01))
+                with colunatitulo2:
+                    colunatitulo2.title("Custo por Cargo")
+
+                
                 GraficocargoadmissaoA,GraficocargoadmissaoB = st.columns((1,0.01))
                 self.Graficocargoadmissao(GraficocargoadmissaoA,
                                           colunadataframe= "nome_cargo",
