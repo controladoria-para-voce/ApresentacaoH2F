@@ -1373,14 +1373,14 @@ class apresentacao():
                 
                 colunatitulo1, colunatitulo2,colunatitulo3 = st.columns((0.2,1,0.01))
                 with colunatitulo2:
-                    colunatitulo2.title("Custo por Cargo")
+                    colunatitulo2.title("Custo de Admissões por Cargo")
 
                 
                 GraficocargoadmissaoA,GraficocargoadmissaoB = st.columns((1,0.01))
                 self.Graficocargoadmissao(GraficocargoadmissaoA,
                                           colunadataframe= "nome_cargo",
                                           orientação= "h",
-                                          titulodografico="Custo por Cargo",
+                                          titulodografico="Custo de Admissões por Cargo",
                                           filtromêsadmissao=  filtroadmissao_mês1)
                 
         #obs.: gáfico horizontal - Serviços
@@ -1463,7 +1463,7 @@ class apresentacao():
             self.Graficoserviço_rescisao(colgraficorescisao2,
                                      colunadataframe= "sq_nome_servico",
                                      orientação= "h",
-                                     titulodografico= "Custo por Centro de Serviço",
+                                     titulodografico= "Custo de Rescisões por Centro de Serviço",
                                      filtro_mêsrescisao = filtrorescisao_mês1
                                      )
             
@@ -1472,7 +1472,7 @@ class apresentacao():
             self.Graficocentrodecusto_rescisao(colgraficorescisao3,
                                            colunadataframe="sq_nome_ccustos",
                                            orientação="h",
-                                           titulodografico="Custo por Centro de Custo",
+                                           titulodografico="Custo de Rescisões por Centro de Custo",
                                            filtro_mêsrescisao=filtrorescisao_mês1)
 
 #####FORMATAÇÃO DA QUARTA PÁGINA - FÉRIAS:____________________________________________________________   
@@ -1551,7 +1551,7 @@ class apresentacao():
             self.Graficoserviço_ferias(Colunaparagraficoferias1, #chamador da coluna criada
                                        colunadodataframe="sq_nome_servico", #atalho presente no código do gráfico e nome da coluna que será selecionada
                                        orientação="h", #orientação do gráfico - horizontal
-                                       titulodografico="Custo por Centro de Serviço",
+                                       titulodografico="Custo de Férias por Centro de Serviço",
                                        filtro_mêsferias=filtro_mêsferias) #, inserir filtro_serviçoferias, filtro_centrodecustoferias - caso va puxar dos filtros
             
         ##obs: Gráfico vertical - Centro de custo
@@ -1559,7 +1559,7 @@ class apresentacao():
             self.Graficocentrodecusto_ferias(Colunaparagraficoferias3, #chamador da coluna criada
                                        colunadodataframe="sq_nome_ccustos", #atalho presente no código do gráfico e nome da coluna que será selecionada
                                        orientação="v" , #orientação do gráfico - vertical
-                                       titulodografico="Custo por Centro de Custo",
+                                       titulodografico="Custo de Férias por Centro de Custo",
                                        filtro_mêsferias=filtro_mêsferias) #, inserir filtro_serviçoferias, filtro_centrodecustoferias - caso va puxar dos filtros
 
 
