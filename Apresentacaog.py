@@ -99,6 +99,8 @@ class apresentacao():
         self.logos = Image.open(r"logosalt.png")
         self.resultadosicone = Image.open(r"resukt.png")
 
+    
+
 #####FUNÇÃO LEMBRETES:_____________________________________________________________________________
     def Lembretes(self):
         Prazo1 = {'bgcolor': '#EFF8F7','title_color': 'green','content_color': 'green','icon_color': 'green', 'icon': 'fa fa-check-circle'}
@@ -618,7 +620,7 @@ class apresentacao():
     ###PARA O TERCEIRO GRÁFICO DE CARGOS - ADMISSAO:_______________________________________________________________
     def Graficocargoadmissao(self,coluna, colunadataframe,orientação,titulodografico,filtromêsadmissao):
         cardadmissao = DadosAdmissao()
-        print(cardadmissao.dtypes)
+        #print(cardadmissao.dtypes)
         if filtromêsadmissao == "Todos":
             card = cardadmissao.groupby([colunadataframe]).sum("salario").reset_index()
         else: 
@@ -1074,12 +1076,16 @@ class apresentacao():
                                   ["Lembretes","Onvio/Chamados", "Rubricas", "Admissão", "Rescisão","Férias"], #abas/páginas
                                   icons = ['alarm','gear','pencil-square','cash-coin','cash', 'paperclip'], #ícones para cada opção de página
                                   menu_icon='list', #ícone do título do menu
-                                  default_index= 0) #para identificar qual índice iniciará
+                                  default_index= 0,
+                                  styles={ "container": {"padding": "5!important", "background-color": "rgba(0,0,0,1"},
+                                        "icon": {"color": "gold", "font-size": "20px"},
+                                        "nav-link": {"font-size": "18px", "text-align": "left", "margin":"0px", "--hover-color": "#78C6A3"},
+                                        "nav-link-selected": {"background-color": "#78C6A3"}}) #para identificar qual índice iniciará
             
 #####FORMATAÇÃO DE TODAS AS PÁGINAS:____________________________________________________________              
         espaco_tela1,espaco_tela2,espaco_tela3,espaco_tela4, espaco_tela5= st.columns([0.05,15,2,1,2]) #Definição de colunas nas páginas do streamlit
         with espaco_tela2: #definição de coluna para a informação abaixo:
-            espaco_tela2.title("Apresentação de Resultados :chart:") #o título ao lado será inserido na "2° coluna" de todas as páginas do projeto, entre o : : é colocado o icone através do site https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/
+            espaco_tela2.title("Apresentação de Resultados :bar_chart:") #o título ao lado será inserido na "2° coluna" de todas as páginas do projeto, entre o : : é colocado o icone através do site https://streamlit-emoji-shortcodes-streamlit-app-gwckff.streamlit.app/
          
          #Obs1 - Os dois itens abaixo (que estão comentados) foram inativados pois foi possível colocar as duas imagens no menu. 
         #with espaco_tela5: #para inserir imagem no topo de todas as páginas do projeto - ao lado do título - a imagem ficará na "5° coluna"
