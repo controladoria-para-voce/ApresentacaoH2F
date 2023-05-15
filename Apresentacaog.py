@@ -55,10 +55,13 @@ def DadosAta():
     base_ata = pd.read_excel(r"ata mes 4.xlsx")
     base_ata["Data"] = pd.to_datetime(base_ata["Data"],format="%d/%m/%Y") #alterar o formato da data
     base_ata["Prazo para realização"]= base_ata["Data"].dt.to_period("d").dt.strftime("%d/%m/%Y")
+    
 
     excluir = ["Data"] #PARA EXCLUIR DA APRESENTAÇÃO UMA DETERMINADA COLUNA
     for i in excluir:
         base_ata.drop(columns = i, inplace= True)
+
+   
     
     Ordemcorreta = ["Atividade", "Responsável", "Prazo para realização", "Realizado?"] #PARA INSERIR A ORDEM DE COLUNAS DESEJADA 
     base_ata = base_ata[Ordemcorreta]
@@ -66,13 +69,17 @@ def DadosAta():
     
 
     return base_ata
+    
 
 @st.cache_data
 def DadosRubricas():
     base_rubrica = pd.read_excel(r"Rubricas Utilizadas Jan-Mar.xlsx")
     base_rubrica.dropna() #para retirar as linhas em branco "ex.: null"
 
-    #base_rubrica.loc[:,~base_rubrica.columns.isin(["Data","Tipo", "Rubricas Utilizadas","Valor"])]  #edição da tabela de admissao
+    base_rubrica.loc[:,~base_rubrica.columns.isin(["Data","Tipo", "Rubricas Utilizadas","Valor"])]  #edição da tabela de admissao
+    base_rubrica_remove = base_rubrica.loc[(base_rubrica["Valor"]<70000) #para excluir valores menores que 10.000
+                                          ]
+    base_rubrica = base_rubrica.drop(base_rubrica_remove.index) #para excluir valores menores que 10.000
 
     return base_rubrica
 
@@ -142,20 +149,23 @@ class apresentacao():
         Tabelaata.update_layout(xaxis = dict(
                                             rangeslider = dict(
                                                             visible = True)))
+        
+        
         return coluna.plotly_chart(Tabelaata, use_container_width=True)
         
 #####FUNÇÃO RÚBRICAS:_____________________________________________________________________________
     def cardrubricas1(self,filtrodata,filtromodelo):
         cardrubrica1 = DadosRescisao()
 
+
         if filtrodata == "Todos":
-            card = cardrubrica1[cardrubrica1["cp3_nome_evento"]==filtromodelo]
+            card = cardrubrica1[cardrubrica1["Rubrica"]==filtromodelo]
             
         else: 
-            card = cardrubrica1[(cardrubrica1["cp3_nome_evento"]==filtromodelo)&
+            card = cardrubrica1[(cardrubrica1["Rubrica"]==filtromodelo)&
                                 (cardrubrica1["cp_competencia"]==filtrodata)]
             
-            card = card["cp3_valor_calc"].sum()
+            card = card["Valor"].sum()
 
             card_4 = f"R$ {card:,.0f}"
             card_4= card_4.replace(",",".")
@@ -166,18 +176,18 @@ class apresentacao():
         
         if filtromodelo == "Todos":
             if filtrodata == "Todos":
-                card = cardrubricas.groupby(["cp3_valor_calc"]).sum().reset_index()
+                card = cardrubricas.groupby(["Valor"]).sum().reset_index()
             else: 
-                card = cardrubricas([cardrubricas["cp_competencia"]==filtrodata])
-                card = cardrubricas.groupby(["cp3_valor_calc"]).sum().reset_index()
+                card = cardrubricas([cardrubricas["Data"]==filtrodata])
+                card = cardrubricas.groupby(["Valor"]).sum().reset_index()
         else: 
             if filtrodata == "Todos":
-                card = cardrubricas[(cardrubricas["cp3_nome_evento"] == filtromodelo)]
-                card = card.groupby(["cp3_valor_calc"]).sum().reset_index()
+                card = cardrubricas[(cardrubricas["Rubrica"] == filtromodelo)]
+                card = card.groupby(["Valor"]).sum().reset_index()
             else: 
-                card = cardrubricas[(cardrubricas["cp3_nome_evento"]== filtromodelo)&
-                                    (cardrubricas["cp_competencia"]==filtrodata)]
-                card = card.groupby(["cp3_valor_calc"]).sum().reset_index()
+                card = cardrubricas[(cardrubricas["Rubrica"]== filtromodelo)&
+                                    (cardrubricas["Data"]==filtrodata)]
+                card = card.groupby(["Valor"]).sum().reset_index()
         if filtrorubrica == "Todos":
             pass
         else:
@@ -190,50 +200,89 @@ class apresentacao():
     def tabelarubrica (self, coluna,filtrorubrica,filtrodatarubrica):
         cardrubricas = DadosRubricas()
 
-        cardrubricas["cp3_valor_calc"] = cardrubricas["cp3_valor_calc"].map("R${:,.2f}".format) #PARA ALTERAR O FORMATO DO VALOR, COLOCANDO R$
+        cardrubricas["Valor"] = cardrubricas["Valor"].map("R${:,.2%}".format) #PARA ALTERAR O FORMATO DO VALOR, COLOCANDO R$
         
-        if filtrorubrica == "Todos":
-            pass
-        else:
-            if filtrorubrica == "Proventos":
-                A = "P"
-
-            else:
-                A = "D"   
-            
-            cardrubricas = cardrubricas[cardrubricas["cp2_prov_desc"]==A]
+        
       
-        cardrubricas.rename(columns={'cp_competencia': 'Data'}, inplace = True)
+        '''cardrubricas.rename(columns={'cp_competencia': 'Data'}, inplace = True)
         cardrubricas.rename(columns={'cp2_prov_desc': 'Tipo'}, inplace = True)
-        cardrubricas.rename(columns={'cp3_nome_evento': 'Rubricas Utilizadas'}, inplace = True)
-        cardrubricas.rename(columns={'cp3_valor_calc': 'Valor'}, inplace = True)
+        cardrubricas.rename(columns={'cp3_nome_evento': 'Rubricas Utilizadas'}, iNplace = True)
+        cardrubricas.rename(columns={'cp3_valor_calc': 'Valor'}, inplace = True)'''
         
         tabelarubrica = go.Figure(
                                 data = [go.Table(
+                                                columnorder = [1,2],
+                                                columnwidth = [80,400],
                                                 header = dict(
-                                                            values = list(cardrubricas.columns),
-                                                            font = dict(
-                                                                        size = 14, color = "rgba(3,102,102,1)", family = "Arial Black, monospace"),
-                                                            line_color = "rgba(153,226,180,1)",
-                                                            align = ["center", "center"],
-                                                            height = 30),
-
+                                                            vlaues = [['Valor']],
+                                                line_color = "rgba(0,146,122,1)",
+                                                fill_color = "rgba(0,146,122,1)",
+                                                align =["left","center"],
+                                                font = dict(
+                                                            color = "black", size = 12),
+                                                            height = 40 ),
                                                 cells = dict(
-                                                            values = [cardrubricas[k].tolist() for k in cardrubricas.columns],
-                                                            font = dict(size = 14, color = "Black", family = "Arial, monospace"),
-                                                            align = ["left", "center"],
-                                                            line_color = "rgba(153,226,180,1)",
-                                                            
-                                                            #format = [".2$"],
-                                                            height = 30)           
+                                                            values = 'Valor',
+                                                            line_color='darkslategray',
+                                                            fill=dict(color=['paleturquoise', 'white']),
+                                                            align=['left', 'center'],
+                                                            font_size=12,
+                                                            height=30)
                                                 )])
-        tabelarubrica.update_layout( 
-                                    height = 800,
-                                    width = 1800)
-        tabelarubrica.update_layout(xaxis = dict(
-                                                rangeslider = dict(
-                                                                    visible = True)))
-        return coluna.plotly_chart(tabelarubrica,use_container_width = True)
+                                               
+
+                                               
+        
+    
+   
+    def Graficorubrica(self, coluna, colunadodataframe, orientação, titulodografico,filtrodata,filtromodelo ):
+        cardrubrica = DadosRubricas()
+        card = cardrubrica
+
+        if filtrodata == "Todos":
+            if filtromodelo == "Todos":
+                card = cardrubrica[cardrubrica["Data"]==filtrodata]
+                card = cardrubrica.groupby([colunadodataframe]).sum("Valor").reset_index()
+            else: 
+                card = cardrubrica[cardrubrica["Rubrica"]==filtromodelo]
+                card = cardrubrica.groupby([colunadodataframe]).sum("Valor").reset_index()
+        else:
+            card = cardrubrica[(cardrubrica["Data"]==filtrodata)&
+                               (cardrubrica["Rubrica"]==filtromodelo)]
+
+            card = card.groupby([colunadodataframe]).sum("Valor").reset_index()
+       
+
+
+        graficorubrica1 = go.Figure()
+        graficorubrica1.add_trace(go.Bar(
+                                        x = card["Valor"],
+                                        y = card[colunadodataframe],
+                                        marker = dict(
+                                                    color = "rgba(0,146,122,1)",
+                                                    line = dict(
+                                                                color = "rgba(0,146,122,0)",
+                                                                width = 1),),
+                                        name = "graficorubrica1",
+                                        text = (card["Valor"].map("R${:,.0f}".format)).str.replace(",","."),
+                                        orientation = orientação))
+        graficorubrica1.update_layout(
+                                        autosize = False,
+                                        width = 400,
+                                        height = 700,
+                                        barmode = "stack",
+                                        yaxis = {"categoryorder":"total ascending"},
+                                        title = {"text": titulodografico,
+                                                 "y": 1,"x": 0.5,
+                                                 "yanchor": "top",
+                                                 "xanchor": "center"},
+                                        font = dict(size = 12,
+                                                    family = "Arial Black, monospace",
+                                                    color = "rgba(0,0,0,1)"))
+        
+        graficorubrica1.update_traces(textposition = "outside")
+        
+        return coluna.plotly_chart(graficorubrica1,use_container_width = True)
 
 #####FUNÇÃO FÉRIAS:_____________________________________________________________________________
     ###PARA CRIAÇÃO DE CARD VALOR TOTAL - FÉRIAS:_______________________________________________________________
@@ -1113,16 +1162,16 @@ class apresentacao():
         #LEMBRETES = AO COLOCAR NO SENTIMENTO - "bad", "good", "neutral" - a cor e o ícone utilizado mudam
             cc = st.columns(3)
             with cc[0]:
-                hc.info_card(title='Admissão', content='O colaborador iniciará suas atividades depois de amanhã? Não se esqueça de nos enviar o pedido de dmissão com 24 horas de antecedência! #ajudeacontabilidade', sentiment='good', title_text_size = "1.7rem",content_text_size="1.3rem",)
+                hc.info_card(title='Admissão', content='O envio do pedido de admissão deve ocorrer com até 24 horas de antecedência! #ajudeacontabilidade', sentiment='good', title_text_size = "1.7rem",content_text_size="1.3rem",)
             with cc[1]:
-                hc.info_card(title='Rescisão', content='Demitiu o colaborador? Lembrando que a partir desta data o relógio começa a contar e o pagamento deve ser feito 10 dias depois! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
+                hc.info_card(title='Rescisão', content='O pagamento da rescisão deve ser feito 10 dias após a demissão! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
             with cc[2]:
-                hc.info_card(title='Férias', content='O seu colaborador irá tirar férias? Não se esqueça de nos comunicar com no mínimo 35 dias de antecedência! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
+                hc.info_card(title='Férias', content='As férias devem ser comunicadas com no mínimo 35 dias de antecedência! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
             cc = st.columns(3)
             with cc[0]:
-                hc.info_card(title='Folha', content='Dia 01 chegando? Não se esqueça de nos enviar os apontamentos necessários da sua folha de pagamento! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
+                hc.info_card(title='Folha', content='O envio dos apontamentos da sua folha de pagamento devem ser enviados todo dia 01 do mês! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
             with cc[1]:
-                hc.info_card(title='Chamados/Onvio', content='Entendemos a urgência dos chamados solicitados, tendo em vista que o nosso maior objetivo será sempre atendê-los com a maior rapidez e eficiência. Para que isso possa ocorrer com assertividade o nosso tempo de análise e retorno é de 72 horas!', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
+                hc.info_card(title='Chamados/Onvio', content='O nosso tempo de análise e retorno dos chamados no Onvio é de 72 horas!', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
             #with cc[2]:
                 #hc.info_card(title='Prazo Mensagens', content='01 de cada mês!', sentiment='neutral', title_text_size = "1.5rem",content_text_size="1.3rem",)
            
@@ -1205,14 +1254,14 @@ class apresentacao():
                 st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html= True)
             st.title("Resumo de Rubricas:")
             
-            filtrorubricacoluna1,filtrorubricacoluna2= st.columns([1,1])
+            filtrorubricacoluna1,filtrorubricacoluna2, filtrorubricacoluna3= st.columns([1,1,1])
 
         ###DEFINIÇÃO DE FILTROS - RUBRICAS:____________________________________________________________
             RUBRICA = DadosRubricas()
-            filtro_datar= RUBRICA["cp_competencia"].unique()
+            filtro_datar= RUBRICA["Data"].unique()
             filtro_datar = np.append(["Todos"],filtro_datar)
-           #filtro_modelo = RUBRICA["cp3_nome_evento"].unique()
-            #filtro_modelo = np.append(["Todos"],filtro_modelo)
+            filtro_modelo = RUBRICA["Rubrica"].unique()
+            filtro_modelo = np.append(["Todos"],filtro_modelo)
             filtro_rubrica =  ["Todos","Proventos","Desconto"]
             #fvalor = RUBRICA["cp3_valor_calc"].unique()
             #fvalor = np.append(["Todos"],fvalor)
@@ -1237,13 +1286,13 @@ class apresentacao():
                     key = "filtro rubrica",
                     index=0)
             
-            #with filtrorubricacoluna3:
-             #   filtromodelorubrica = st.selectbox(
-              #      "Escolha a situação",
-               #     filtro_modelo,
-              #      help= "A Incluir",
-               #     key = "Filtro de modelo",
-               #     index=0)
+            with filtrorubricacoluna3:
+                filtromodelorubrica = st.selectbox(
+                  "Escolha a situação",
+                    filtro_modelo,
+                   help= "A Incluir",
+                    key = "Filtro de modelo",
+                   index=0)
 
 ###CHAMADOR DE FUNÇÕES - rubricas:____________________________________________________________
         ###CHAMADOR DE FUNÇÕES - CARD Rubricas:____________________________________________________________
@@ -1258,26 +1307,25 @@ class apresentacao():
             
 ###CHAMADOR DE FUNÇÕES - GRÁFICO 1,2 e 3 rubricas:____________________________________________________________
 #obs.: gáfico horizontal - total
-           # graficocoluna1,graficocoluna2,graficocoluna3 = st.columns((1,0.01))
-            #self.Graficorubrica1(graficocoluna1,
-                                 #colunadataframe="cp3_nome_evento",
-                                 #orientação= "h",
-                                 #titulodografico= "rubricas",
-                                 #filtrorubrica= filtrorubricarubrica,
-                                 #filtrodata=filtrodatarubrica
-                                #)
-            graficocoluna0,graficocoluna2,graficocoluna3 = st.columns((0.2,1,0.01))
+            graficocoluna1,graficocoluna2,graficocoluna3 = st.columns((1,0.01,0.01))
+            self.Graficorubrica(graficocoluna1,
+                                 colunadodataframe="Rubrica",
+                                 orientação= "h",
+                                 titulodografico= "rubricas",
+                                 filtrodata=filtrodatarubrica,
+                                 filtromodelo= filtromodelorubrica
+                                )
+            #graficocoluna0,graficocoluna2,graficocoluna3 = st.columns((0.2,1,0.01))
 
 #obs.: tabela - total
-            with graficocoluna2:
+            '''with graficocoluna2:
                 graficocoluna2.title("Rubricas da Folha de Pagamento")
             
             graficocoluna1,graficocoluna12 = st.columns((1,0.01))
 
             self.tabelarubrica(graficocoluna1, 
                                filtrorubrica = filtrorubricarubrica,
-                                filtrodatarubrica = filtrodatarubrica)
-
+                                filtrodatarubrica = filtrodatarubrica)'''
 
         
 
