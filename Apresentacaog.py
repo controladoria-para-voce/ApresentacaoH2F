@@ -56,29 +56,26 @@ def DadosAta():
     base_ata["Data"] = pd.to_datetime(base_ata["Data"],format="%d/%m/%Y") #alterar o formato da data
     base_ata["Prazo para realização"]= base_ata["Data"].dt.to_period("d").dt.strftime("%d/%m/%Y")
     
-
     excluir = ["Data"] #PARA EXCLUIR DA APRESENTAÇÃO UMA DETERMINADA COLUNA
     for i in excluir:
         base_ata.drop(columns = i, inplace= True)
 
-   
-    
-    Ordemcorreta = ["Atividade", "Responsável", "Prazo para realização", "Realizado?"] #PARA INSERIR A ORDEM DE COLUNAS DESEJADA 
+    base_ata["Solicitado em"] = pd.to_datetime(base_ata["Solicitado em"],format="%d/%m/%Y") #alterar o formato da data
+    base_ata["Solicitado em:"]= base_ata["Solicitado em"].dt.to_period("d").dt.strftime("%d/%m/%Y")
+
+    Ordemcorreta = ["Solicitado em:", "Atividade", "Responsável", "Departamento", "Prazo para realização", "Realizado?"] #PARA INSERIR A ORDEM DE COLUNAS DESEJADA 
     base_ata = base_ata[Ordemcorreta]
 
-    
-
     return base_ata
-    
 
 @st.cache_data
 def DadosRubricas():
     base_rubrica = pd.read_excel(r"Rubricas Utilizadas Jan-Mar.xlsx")
     base_rubrica.dropna() #para retirar as linhas em branco "ex.: null"
 
-    base_rubrica.loc[:,~base_rubrica.columns.isin(["Data","Tipo", "Rubricas Utilizadas","Valor"])]  #edição da tabela de admissao
-    base_rubrica_remove = base_rubrica.loc[(base_rubrica["Valor"]<70000) #para excluir valores menores que 10.000
-                                          ]
+    #base_rubrica.loc[:,~base_rubrica.columns.isin(["Data","Tipo", "Rubricas Utilizadas","Valor"])]  #edição da tabela de admissao
+    base_rubrica_remove = base_rubrica.loc[(base_rubrica["Valor"]<60000) #para excluir valores menores que 10.000
+                                         ]
     base_rubrica = base_rubrica.drop(base_rubrica_remove.index) #para excluir valores menores que 10.000
 
     return base_rubrica
@@ -117,9 +114,25 @@ class apresentacao():
         Prazo5 = {'bgcolor': '#EFF8F7','title_color': 'green','content_color': 'green','icon_color': 'green', 'icon': 'fa fa-check-circle'}
         #Prazo6 = {'bgcolor': '#EFF8F7','title_color': 'green','content_color': 'green','icon_color': 'green', 'icon': 'fa fa-check-circle'}
 
-    def Ata(self,coluna):
+
+    def Atafiltros(self,departamento):
+        cardatafiltro = DadosAta()
+        
+        if departamento == "Todos":
+            pass 
+        else:
+            card = cardatafiltro([cardatafiltro["Departamento"]==departamento])
+           
+        return card
+
+    def Ata(self,coluna,departamento):
         cardata = DadosAta()
         #print(cardata)
+        #PARA INTEGRAR FILTRO DE DEPARTAMENTO A TABELA DE ATA. 
+        if departamento == "Todos":
+            pass 
+        else:
+            cardata = cardata[cardata["Departamento"]==departamento]
 
         Tabelaata = go.Figure(
                             data=[go.Table(
@@ -170,11 +183,42 @@ class apresentacao():
             card_4 = f"R$ {card:,.0f}"
             card_4= card_4.replace(",",".")
             return card_4
-    
-    def Rubricasdafolha(self,  filtrodata, filtromodelo,filtrorubrica):
-        cardrubricas = DadosRubricas()
         
-        if filtromodelo == "Todos":
+
+    def cardrubrica(self,data,descrição):
+        cardrubrica = DadosRubricas()
+
+        if data == "Todos":
+                card = cardrubrica[cardrubrica["Rubrica"]=="descrição"]
+        else:
+                card = cardrubrica[(cardrubrica["Rubrica"]==descrição)&
+                                   (cardrubrica["Data"]==data)
+                ]
+
+        card_ru = f"R${card:,.0f}"
+        card_ru = card_ru.replace(",",".")
+        return card_ru
+    
+    def Rubricasdafolha(self,  data, descrição,):
+        cardrubricas = DadosRubricas()
+
+        if data == "Todos":
+                    if descrição == "Todos":
+                        card = cardrubricas["Valor"].sum()
+                    else:
+                        card_r = cardrubricas[cardrubricas["Rubrica"]==descrição]
+                        card = cardrubricas["Valor"].sum()
+        else:
+                    if descrição == "Todos":
+                        card_r = cardrubricas[cardrubricas["Data"]== data]
+                        card = card_r["Valor"].sum()
+                    else: card_r = cardrubricas[
+                                                (cardrubricas["Data"]==data)&
+                                                (cardrubricas["Rubrica"]==descrição)]
+                    card = card_r["Valor"].sum()
+
+        
+        '''if filtromodelo == "Todos":
             if filtrodata == "Todos":
                 card = cardrubricas.groupby(["Valor"]).sum().reset_index()
             else: 
@@ -195,7 +239,7 @@ class apresentacao():
                 A = "P"
             else:
                 A = "D"
-            cardrubricas = cardrubricas[cardrubricas["cp2_prov_desc"]==A]
+            cardrubricas = cardrubricas[cardrubricas["cp2_prov_desc"]==A]'''
            
     def tabelarubrica (self, coluna,filtrorubrica,filtrodatarubrica):
         cardrubricas = DadosRubricas()
@@ -280,7 +324,7 @@ class apresentacao():
                                                     family = "Arial Black, monospace",
                                                     color = "rgba(0,0,0,1)"))
         
-        graficorubrica1.update_traces(textposition = "outside")
+        graficorubrica1.update_traces(textposition = "auto")
         
         return coluna.plotly_chart(graficorubrica1,use_container_width = True)
 
@@ -1162,25 +1206,50 @@ class apresentacao():
         #LEMBRETES = AO COLOCAR NO SENTIMENTO - "bad", "good", "neutral" - a cor e o ícone utilizado mudam
             cc = st.columns(3)
             with cc[0]:
-                hc.info_card(title='Admissão', content='O envio do pedido de admissão deve ocorrer com até 24 horas de antecedência! #ajudeacontabilidade', sentiment='good', title_text_size = "1.7rem",content_text_size="1.3rem",)
+                hc.info_card(title='Admissão', content='O envio do pedido de admissão deve ocorrer com até 24 horas de antecedência!', sentiment='good', title_text_size = "1.7rem",content_text_size="1.3rem",)
             with cc[1]:
-                hc.info_card(title='Rescisão', content='O pagamento da rescisão deve ser feito 10 dias após a demissão! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
+                 hc.info_card(title='Folha', content='O envio dos apontamentos da sua folha de pagamento devem ser enviados todo dia 01 do mês! ', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
             with cc[2]:
-                hc.info_card(title='Férias', content='As férias devem ser comunicadas com no mínimo 35 dias de antecedência! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
+                hc.info_card(title='Férias', content='As férias devem ser comunicadas com no mínimo 35 dias de antecedência! ', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
             cc = st.columns(3)
             with cc[0]:
-                hc.info_card(title='Folha', content='O envio dos apontamentos da sua folha de pagamento devem ser enviados todo dia 01 do mês! #ajudeacontabilidade', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
+                hc.info_card(title='Rescisão', content='O pagamento da rescisão deve ser feito 10 dias após a demissão! ', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
+               
             with cc[1]:
                 hc.info_card(title='Chamados/Onvio', content='O nosso tempo de análise e retorno dos chamados no Onvio é de 72 horas!', sentiment='good', title_text_size = "1.5rem",content_text_size="1.3rem",)
             #with cc[2]:
                 #hc.info_card(title='Prazo Mensagens', content='01 de cada mês!', sentiment='neutral', title_text_size = "1.5rem",content_text_size="1.3rem",)
-           
+            
+            
+
+            #colunaata1, colunaata2,colunaata3 = st.columns([1,1,1])
+
+           #self.Atafiltros(colunaata2,
+               #             departamento= filtrodepartamento)
+
+
             colunatitulo1, colunatitulo2,colunatitulo3 = st.columns((0.2,1,0.01))
             with colunatitulo2:
                 colunatitulo2.title("Atas de Reunião - DEMANDAS")
+                
+            filtroscolunasata0,filtroscolunasata1,filtroscolunasata2= st.columns([0.01,1,0.01])
+            
+            ATA = DadosAta()
+            filtro_departamento = ATA["Departamento"].unique()
+            filtro_departamento = np.append(["Todos"], filtro_departamento)
+
+            with filtroscolunasata1:
+                    filtrodepartamento = st.selectbox(
+                        "Escolha o Departamento",
+                        filtro_departamento,
+                        help = "A incluir",
+                        key = "Departamento",
+                        index = 0
+                )
 
             colunatabelaata1, colunatabelaata2 = st.columns((1,0.01))
-            self.Ata(colunatabelaata1)
+            self.Ata(colunatabelaata1,
+                     departamento=filtrodepartamento)
 
 
 #####FORMATAÇÃO DA SEGUNDA PÁGINA - ONVIO/CHAMADO:____________________________________________________________              
@@ -1296,10 +1365,10 @@ class apresentacao():
 
 ###CHAMADOR DE FUNÇÕES - rubricas:____________________________________________________________
         ###CHAMADOR DE FUNÇÕES - CARD Rubricas:____________________________________________________________
-            #colunacardrubricaA,colunacardrubricaB,colunacardrubricaC = st.columns((1,1,1))
-            '''colunacardrubricaA.metric(label= "valor", value = self.cardrubricas1(
-                                                                                 filtrodata = filtrodatarubrica,
-                                                                                 filtromodelo= filtromodelorubrica))'''
+            colunacardrubricaA,colunacardrubricaB,colunacardrubricaC = st.columns((1,1,1))
+            colunacardrubricaA.metric(label= "SALÁRIO FIXO", value = self.cardrubrica( descrição="SALÁRIO FIXO",
+                                                                                 data = filtrodatarubrica,
+                                                                                 ))
 
 
             #colunacardrubricaA.metric(label= "SALÁRIO FIXO", value = self.cardrubricas(,
