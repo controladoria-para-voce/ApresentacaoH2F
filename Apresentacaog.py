@@ -21,11 +21,14 @@ def DadosFerias(): #função criada para importar o arquivo
 @st.cache_data
 def DadosRescisao():
     base_rescisao = pd.read_excel(r"rescisões jan-mar.xlsx")
+    
+    
     return base_rescisao
 
 @st.cache_data
 def DadosAdmissao():
     base_admissao = pd.read_excel(r"Admissões jan-mar.xlsx")
+    
     
     excluir = ["i_empregados", "situacao"] #PARA EXCLUIR DA APRESENTAÇÃO UMA DETERMINADA COLUNA
     for i in excluir:
@@ -34,7 +37,7 @@ def DadosAdmissao():
     #base_admissao["salario"] = base_admissao["salario"].map("R${:,.2f}".format) #PARA ALTERAR O FORMATO DO VALOR, COLOCANDO R$
     #base_admissao.loc[:,base_admissao.columns.isin(["nome","salario"])]  #edição da tabela de admissao
     
-    Ordemcorreta = ["nome_quebra", "nome", "nome_cargo","admissao","salario"] #PARA INSERIR A ORDEM DE COLUNAS DESEJADA 
+    Ordemcorreta = ["Data", "nome", "Cargo","Contrato","Valor"] #PARA INSERIR A ORDEM DE COLUNAS DESEJADA 
     base_admissao = base_admissao[Ordemcorreta]
 
    # base_admissao.rename(columns={"nome_quebra": "Contrato/Serviço"}, inplace=True)
@@ -78,6 +81,7 @@ def DadosRubricas():
                                          ]
     base_rubrica = base_rubrica.drop(base_rubrica_remove.index) #para excluir valores menores que 10.000
 
+    
     return base_rubrica
 
 @st.cache_data
@@ -87,11 +91,13 @@ def DadosAtivos():
     base_ativos["Competência"]= base_ativos["Competencia"].dt.to_period("d").dt.strftime("%d/%m/%Y")
 
     base_ativos["Líquido Geral"] = base_ativos["Líquido Geral"].map("R${:,.2f}".format) #PARA ALTERAR O FORMATO DO VALOR, COLOCANDO R$
-    st.subheader("Custo Total da Folha de Pagamento:")   
+    st.subheader("Colaboradores Ativos - Custo Total da Folha de Pagamento:")   
     base_ativos.loc[:,~base_ativos.columns.isin(["Competencia","Ativos"])]  #edição da tabela de admissao
 
     
     return base_ativos
+
+
 
 class apresentacao():
 ###PARA SUBIR AS IMAGENS:_______________________________________________________________
@@ -167,12 +173,13 @@ class apresentacao():
         return coluna.plotly_chart(Tabelaata, use_container_width=True)
         
 #####FUNÇÃO RÚBRICAS:_____________________________________________________________________________
-    def cardrubricas1(self,filtrodata,filtromodelo):
+    '''def cardrubricas1(self,filtrodata,filtromodelo):
         cardrubrica1 = DadosRescisao()
 
 
         if filtrodata == "Todos":
             card = cardrubrica1[cardrubrica1["Rubrica"]==filtromodelo]
+            card = cardrubrica1["Valor"].sum()
             
         else: 
             card = cardrubrica1[(cardrubrica1["Rubrica"]==filtromodelo)&
@@ -182,43 +189,49 @@ class apresentacao():
 
             card_4 = f"R$ {card:,.0f}"
             card_4= card_4.replace(",",".")
-            return card_4
-        
+            return card_4'''
 
     def cardrubrica(self,data,descrição):
         cardrubrica = DadosRubricas()
 
         if data == "Todos":
-                card = cardrubrica[cardrubrica["Rubrica"]=="descrição"]
+                card = cardrubrica[cardrubrica["Rubrica"]==descrição]
+                card = card["Valor"].sum()
         else:
                 card = cardrubrica[(cardrubrica["Rubrica"]==descrição)&
                                    (cardrubrica["Data"]==data)
                 ]
+                card = card["Valor"].sum()
 
-        card_ru = f"R${card:,.0f}"
-        card_ru = card_ru.replace(",",".")
-        return card_ru
+        card_3 = f"R$ {card:,.0f}"
+        card_3= card_3.replace(",",".")
+        return card_3
     
-    def Rubricasdafolha(self,  data, descrição,):
+    '''def Rubricasdafolha(self,  data, descrição,):
         cardrubricas = DadosRubricas()
-
         if data == "Todos":
-                    if descrição == "Todos":
-                        card = cardrubricas["Valor"].sum()
-                    else:
-                        card_r = cardrubricas[cardrubricas["Rubrica"]==descrição]
-                        card = cardrubricas["Valor"].sum()
+            if descrição == "Todos":
+                
+                card = cardrubricas[cardrubricas["Rubrica"]==descrição]
+                card = cardrubricas[cardrubricas["Data"]== data]
+                card = cardrubricas["Valor"].sum()
+            else:
+                
+                card = cardrubricas[cardrubricas["Rubrica"]==descrição]
+                card = cardrubricas["Valor"].sum()
+            print(card)
         else:
-                    if descrição == "Todos":
-                        card_r = cardrubricas[cardrubricas["Data"]== data]
-                        card = card_r["Valor"].sum()
-                    else: card_r = cardrubricas[
-                                                (cardrubricas["Data"]==data)&
-                                                (cardrubricas["Rubrica"]==descrição)]
-                    card = card_r["Valor"].sum()
+            
+                card = cardrubricas[cardrubricas["Data"]== data]
+                card = cardrubricas["Valor"].sum()
+           
+                cardrubricas = cardrubricas[
+                                            (cardrubricas["Data"]==data)&
+                                            (cardrubricas["Rubrica"]==descrição)]
+                card = cardrubricas["Valor"].sum()'''
 
         
-        '''if filtromodelo == "Todos":
+    ''' if filtromodelo == "Todos":
             if filtrodata == "Todos":
                 card = cardrubricas.groupby(["Valor"]).sum().reset_index()
             else: 
@@ -273,32 +286,18 @@ class apresentacao():
                                                             font_size=12,
                                                             height=30)
                                                 )])
-                                               
-
-                                               
-        
-    
    
-    def Graficorubrica(self, coluna, colunadodataframe, orientação, titulodografico,filtrodata,filtromodelo ):
+    def Graficonovo(self, coluna, colunadodataframe, orientação, titulodografico,filtrodata ):
         cardrubrica = DadosRubricas()
         card = cardrubrica
 
         if filtrodata == "Todos":
-            if filtromodelo == "Todos":
-                card = cardrubrica[cardrubrica["Data"]==filtrodata]
-                card = cardrubrica.groupby([colunadodataframe]).sum("Valor").reset_index()
-            else: 
-                card = cardrubrica[cardrubrica["Rubrica"]==filtromodelo]
-                card = cardrubrica.groupby([colunadodataframe]).sum("Valor").reset_index()
-        else:
-            card = cardrubrica[(cardrubrica["Data"]==filtrodata)&
-                               (cardrubrica["Rubrica"]==filtromodelo)]
-
+            card = cardrubrica.groupby([colunadodataframe]).sum("Valor").reset_index()
+        else: 
+            card = cardrubrica[cardrubrica["Data"]==filtrodata]
             card = card.groupby([colunadodataframe]).sum("Valor").reset_index()
-       
-
-
-        graficorubrica1 = go.Figure()
+            
+        '''graficorubrica1 = go.Figure()
         graficorubrica1.add_trace(go.Bar(
                                         x = card["Valor"],
                                         y = card[colunadodataframe],
@@ -324,9 +323,37 @@ class apresentacao():
                                                     family = "Arial Black, monospace",
                                                     color = "rgba(0,0,0,1)"))
         
-        graficorubrica1.update_traces(textposition = "auto")
+        graficorubrica1.update_traces(textposition = "auto")'''
+
+        Graficonovo = go.Figure()
+        Graficonovo.add_trace(go.Bar(
+                                    x = card["Valor"],
+                                    y = card[colunadodataframe],
+                                    marker = dict(
+                                                    color = "rgba(0,146,122,1)",
+                                                    line = dict(
+                                                                color = "rgba(0,146,122,0)",
+                                                                width =1),),
+                                    name = "graficoderubrica",
+                                    text = (card["Valor"].map("R${:,.0f}".format)).str.replace(",","."),
+                                    orientation = orientação
+                                    ))
+        Graficonovo.update_layout(
+                                autosize = False,
+                                width = 200,
+                                height = 600,
+                                barmode = "stack",
+                                yaxis = {"categoryorder":"total ascending"},
+                                title = {"text": titulodografico,
+                                         "y":1, "x":0.5,
+                                         'yanchor':"top",
+                                         "xanchor": "center"},
+                                font = dict(size = 15,
+                                            family = "Arial Black, monospace",
+                                            color = "rgba(0,0,0,1)"))
+        Graficonovo.update_traces(textposition = "auto")
         
-        return coluna.plotly_chart(graficorubrica1,use_container_width = True)
+        return coluna.plotly_chart(Graficonovo,use_container_width = True)
 
 #####FUNÇÃO FÉRIAS:_____________________________________________________________________________
     ###PARA CRIAÇÃO DE CARD VALOR TOTAL - FÉRIAS:_______________________________________________________________
@@ -576,22 +603,22 @@ class apresentacao():
                      
         if filtrocargoadmissao == "Todos":
             if filtroserviçoadmissao == "Todos":
-                card = cardadmissao["salario"].sum()
+                card = cardadmissao["Valor"].sum()
 
             else: 
-                card_v = cardadmissao[cardadmissao["nome_quebra"]==filtroserviçoadmissao]
-                card = card_v["salario"].sum()
+                card_v = cardadmissao[cardadmissao["Contrato"]==filtroserviçoadmissao]
+                card = card_v["Valor"].sum()
 
         else: 
             if filtroserviçoadmissao == "Todos":
-                card_v = cardadmissao[cardadmissao["nome_cargo"]==filtrocargoadmissao]
-                card = card_v["salario"].sum()
+                card_v = cardadmissao[cardadmissao["Cargo"]==filtrocargoadmissao]
+                card = card_v["Valor"].sum()
 
             else:
                 card_v = cardadmissao[(
-                                    cardadmissao["nome_cargo"]==filtrocargoadmissao)&
-                                    (cardadmissao["nome_quebra"]==filtroserviçoadmissao)]
-                card = card_v["salario"].sum()
+                                    cardadmissao["Cargo"]==filtrocargoadmissao)&
+                                    (cardadmissao["Contrato"]==filtroserviçoadmissao)]
+                card = card_v["Valor"].sum()
 
 
         card_5 = f"R$ {card:,.0f}"
@@ -606,22 +633,22 @@ class apresentacao():
             if filtroadmissaocargo == "Todos":
                 pass
             else: 
-                cardadmissao = cardadmissao[cardadmissao["nome_cargo"]==filtroadmissaocargo]
+                cardadmissao = cardadmissao[cardadmissao["Cargo"]==filtroadmissaocargo]
         else:
-            cardadmissao = cardadmissao[cardadmissao["nome_quebra"]==filtroadmissaoservico]
+            cardadmissao = cardadmissao[cardadmissao["Contrato"]==filtroadmissaoservico]
 
-        cardadmissao = cardadmissao[["nome","admissao","salario"]] #selecionar somente essas três colunas que serão usadas
-        cardadmissao["admissao"] = pd.to_datetime(cardadmissao["admissao"],format="%d/%m/%Y") #alterar o formato da data
+        cardadmissao = cardadmissao[["nome","Data","Valor"]] #selecionar somente essas três colunas que serão usadas
+        cardadmissao["Data"] = pd.to_datetime(cardadmissao["Data"],format="%d/%m/%Y") #alterar o formato da data
         #card = cardadmissao.drop_duplicates(subset=["nome","admissao"],
         #                                    inplace=True)
        
-        card = cardadmissao.groupby([pd.Grouper(key= "admissao", freq= "M", axis=0)]).count().reset_index()
+        card = cardadmissao.groupby([pd.Grouper(key= "Data", freq= "M", axis=0)]).count().reset_index()
 
         graficoevolucaomensaladmissao = go.Figure()
 
         graficoevolucaomensaladmissao.add_trace(go.Bar(
                                                         x = card[colunadataframe],
-                                                        y = card["salario"],
+                                                        y = card["Valor"],
                                                         marker= dict(
                                                                     color = "rgba(0,146,122,1)",
                                                                     line = dict(
@@ -711,7 +738,7 @@ class apresentacao():
 
 
     ###PARA O TERCEIRO GRÁFICO DE CARGOS - ADMISSAO:_______________________________________________________________
-    def Graficocargoadmissao(self,coluna, colunadataframe,orientação,titulodografico,filtromêsadmissao):
+    '''def Graficocargoadmissao(self,coluna, colunadataframe,orientação,titulodografico,filtromêsadmissao):
         cardadmissao = DadosAdmissao()
         #print(cardadmissao.dtypes)
         if filtromêsadmissao == "Todos":
@@ -746,18 +773,9 @@ class apresentacao():
         cardadmissao["salario"] = cardadmissao["salario"].str.replace(",",".")
         
         
-        return coluna.plotly_chart(tabelaadmissao2, use_container_width = True)
-
-
-
-
-
-
-
-
-        return coluna.plotly_chart(graficoadmissao1, use_container_width = True)
-
-    ###PARA TESTE DO QUARTA TABELA DE TOTAL DA FOLHA - ADMISSAO:_______________________________________________________________
+        return coluna.plotly_chart(tabelaadmissao2, use_container_width = True)'''
+        #return coluna.plotly_chart(graficoadmissao1, use_container_width = True)
+    ###PARA TESTE DO QUARTA TABELA DE TOTAL DA FOLHA - ADMISSAO:_____________________________________________________________
     def testeterceiroadmissao(self, coluna, filtromêsadmissao ):
         cardadmissao = DadosAtivos()
 
@@ -803,11 +821,9 @@ class apresentacao():
         
         return coluna.plotly_chart(tabelaadmissao, use_container_width = True)
         
-                                
-
-
-
-
+    def tentativagraficobarra(self,coluna, titulodografico):
+        card_a = DadosAdmissao()
+        card_r = DadosRescisao()                       
 
 #####FUNÇÃO PARA ONVIO/CHAMADOS:____________________________________________________________
     def Onvio_chamados(self,filtrotratativaonvio,filtrosituaçãoonvio):#todo parametro apos isto deve aparecer sempre que a função for chamada
@@ -838,7 +854,7 @@ class apresentacao():
                              (cardonvio["SITUAÇÃO"]==SITUAÇÃO)]
             card = card["TRATATIVA"].count()
 
-        return card
+        return card 
         
 
     ###PARA O PRIMEIRO GRÁFICO DE % - ONVIO/CHAMADO_______________________________________________________________        
@@ -964,22 +980,22 @@ class apresentacao():
         #print(filtroservicorescisao)
         if filtrocentrodecustorescisao == "Todos":
             if filtroservicorescisao == "Todos":
-                card = cardrescisao["value"].sum()
+                card = cardrescisao["Valor"].sum()
                 #print(card)
 
             else:
-                card_v = cardrescisao[cardrescisao["sq_nome_servico"]==filtroservicorescisao]
-                card = card_v["value"].sum()
+                card_v = cardrescisao[cardrescisao["Contrato"]==filtroservicorescisao]
+                card = card_v["Valor"].sum()
         else: 
             if filtroservicorescisao == "Todos":
-                card_v = cardrescisao[cardrescisao["sq_nome_ccustos"]==filtrocentrodecustorescisao]
-                card = card_v['value'].sum()
+                card_v = cardrescisao[cardrescisao["Centro de Custo"]==filtrocentrodecustorescisao]
+                card = card_v['Valor'].sum()
 
             else: 
                 card_v = cardrescisao[
-                    (cardrescisao["sq_nome_ccustos"]==filtrocentrodecustorescisao) &
-                                    (cardrescisao["sq_nome_servico"]==filtroservicorescisao)]
-                card = card_v["value"].sum()
+                    (cardrescisao["Centro de Custo"]==filtrocentrodecustorescisao) &
+                                    (cardrescisao["Contrato"]==filtroservicorescisao)]
+                card = card_v["Valor"].sum()
 
         card_2 = f"R$ {card:,.0f}" #criação da variavel "card_1" para trazer o 0 para as casas decimais, transformando em um string
         card_2 = card_2.replace(",",".") #trocar virgula por ponto
@@ -990,13 +1006,13 @@ class apresentacao():
     def Rescisoes2(self,tipo,filtrorescisao_mês,):
         cardrescisao = DadosRescisao()
         if filtrorescisao_mês == "Todos":
-            card = cardrescisao[cardrescisao['variable']==tipo]
+            card = cardrescisao[cardrescisao['Tipo']==tipo]
 
         else: 
-            card = cardrescisao[(cardrescisao["variable"]==tipo)&
-                                (cardrescisao["sq_dataini"]==filtrorescisao_mês)]
+            card = cardrescisao[(cardrescisao["Tipo"]==tipo)&
+                                (cardrescisao["Data"]==filtrorescisao_mês)]
 
-        card = card["value"].sum()
+        card = card["Valor"].sum()
 
         card_2 = f"R$ {card:,.0f}"
         card_2 = card_2.replace(",",".")
@@ -1006,13 +1022,13 @@ class apresentacao():
     def Rescisoes3(self,tipo2,filtrorescisao_mês,):
         cardrescisao = DadosRescisao()
         if filtrorescisao_mês == "Todos":
-            card = cardrescisao[cardrescisao["variable"]==tipo2]
+            card = cardrescisao[cardrescisao["Tipo"]==tipo2]
 
         else:
-            card = cardrescisao[(cardrescisao["variable"]==tipo2)&
-                                (cardrescisao["sq_dataini"]==filtrorescisao_mês)]
+            card = cardrescisao[(cardrescisao["Tipo"]==tipo2)&
+                                (cardrescisao["Data"]==filtrorescisao_mês)]
         
-        card = card["value"].sum()
+        card = card["Valor"].sum()
 
         card_2 = f"R$ {card:,.0f}"
         card_2 = card_2.replace(",",".")
@@ -1027,22 +1043,24 @@ class apresentacao():
             if filtrocentrodecustorescisao == "Todos":
                 pass 
             else: 
-                cardrescisao = cardrescisao[cardrescisao["sq_nome_ccustos"]==filtrocentrodecustorescisao]
+                cardrescisao = cardrescisao[cardrescisao["Centro de Custo"]==filtrocentrodecustorescisao]
         else:
-            cardrescisao = cardrescisao[cardrescisao["sq_nome_servico"]==filtroserviçorescisao]
+            cardrescisao = cardrescisao[cardrescisao["Contrato"]==filtroserviçorescisao]
 
 
         #PARA COMEÇAR O GRÁFICO LIMPANDO AS LINHAS DUPLICADAS
-        cardrescisao = cardrescisao[["nome", "sq_dataini", "value"]]
-        card = cardrescisao.drop_duplicates(subset=["nome", "sq_dataini"],
+        #cardrescisao = cardrescisao[["nome", "Data", "Valor"]]
+        
+        card = cardrescisao.drop_duplicates(subset=["nome"],
                                             inplace=True)
-        card = cardrescisao.groupby([colunadataframe]).count().reset_index()
+        card = cardrescisao.groupby("Data").count().reset_index()    
+        
 
         graficoevolucaomensalrescisao = go.Figure()
         ###1° ETAPA: CRIAÇÃO DO GRÁFICO DE BARRAS - POR PARTES:
         graficoevolucaomensalrescisao.add_trace(go.Bar(
                                                     x = card[colunadataframe],
-                                                    y = card["value"],
+                                                    y = card["Valor"],
                                                     marker= dict(
                                                                 color = "rgba(0,146,122,1)",
                                                                 line = dict(
@@ -1075,15 +1093,15 @@ class apresentacao():
     def Graficoserviço_rescisao(self,coluna, colunadataframe, orientação,filtro_mêsrescisao, titulodografico):
         cardrescisao = DadosRescisao()
         if filtro_mêsrescisao == "Todos":
-            card = cardrescisao.groupby([colunadataframe]).sum("value").reset_index()
+            card = cardrescisao.groupby([colunadataframe]).sum("Valor").reset_index()
         else: 
-            card = cardrescisao[cardrescisao["sq_dataini"]==filtro_mêsrescisao]
-            card = card.groupby([colunadataframe]).sum("value").reset_index()
+            card = cardrescisao[cardrescisao["Data"]==filtro_mêsrescisao]
+            card = card.groupby([colunadataframe]).sum("Valor").reset_index()
 
 
         graficoserviçorescisao = go.Figure()
         graficoserviçorescisao.add_trace(go.Bar(
-                                                x = card["value"],
+                                                x = card["Valor"],
                                                 y = card[colunadataframe],
                                                 marker = dict(
                                                                 color = "rgba(0,146,122,1)",
@@ -1091,7 +1109,7 @@ class apresentacao():
                                                                             color = "rgba(0,146,122,0)",
                                                                             width = 1),),
                                                 name = "graficorescisao1",
-                                                text = (card["value"].map("R$ {:,.0f}".format)).str.replace(",","."),
+                                                text = (card["Valor"].map("R$ {:,.0f}".format)).str.replace(",","."),
                                                 orientation = orientação))
         graficoserviçorescisao.update_layout(
                                             autosize = False,
@@ -1115,17 +1133,17 @@ class apresentacao():
     def Graficocentrodecusto_rescisao(self, coluna, colunadataframe, orientação, titulodografico,filtro_mêsrescisao):
         cardrescisao = DadosRescisao()
         if filtro_mêsrescisao == "Todos":
-            card = cardrescisao.groupby([colunadataframe]).sum("value").reset_index()
+            card = cardrescisao.groupby([colunadataframe]).sum("Valor").reset_index()
 
         else: 
-            card = cardrescisao[cardrescisao["sq_dataini"]==filtro_mêsrescisao]
-            card = card.groupby([colunadataframe]).sum("value").reset_index()
+            card = cardrescisao[cardrescisao["Data"]==filtro_mêsrescisao]
+            card = card.groupby([colunadataframe]).sum("Valor").reset_index()
 
         graficorescisao3 = go.Figure()
         ###1° ETAPA: CRIAÇÃO DO GRÁFICO DE BARRAS - POR PARTES: 
         #obs: para gráficos verticais o x e y devem sem invertidos sendo o dataframe primeiro
         graficorescisao3.add_trace(go.Bar(
-                                        x = card["value"],
+                                        x = card["Valor"],
                                         y = card[colunadataframe],
                                         marker=dict(
                                                     color = "rgba(0,146,122,1)",
@@ -1133,7 +1151,7 @@ class apresentacao():
                                                                 color = "rgba(0,146,122,0)",
                                                                 width =1),),
                                         name = "garficorescisao3",
-                                        text= (card["value"].map("R$ {:,.0f}".format)).str.replace(",","."),
+                                        text= (card["Valor"].map("R$ {:,.0f}".format)).str.replace(",","."),
                                         orientation= orientação))
         ###2° ETAPA: EDIÇÃO DO LAYOUT DO GRÁFICO DE BARRAS - POR PARTES:
         graficorescisao3.update_layout(
@@ -1323,20 +1341,18 @@ class apresentacao():
                 st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html= True)
             st.title("Resumo de Rubricas:")
             
-            filtrorubricacoluna1,filtrorubricacoluna2, filtrorubricacoluna3= st.columns([1,1,1])
+            filtrorubricacoluna1,filtrorubricacoluna2 = st.columns([1,0.1])
 
         ###DEFINIÇÃO DE FILTROS - RUBRICAS:____________________________________________________________
             RUBRICA = DadosRubricas()
             filtro_datar= RUBRICA["Data"].unique()
             filtro_datar = np.append(["Todos"],filtro_datar)
-            filtro_modelo = RUBRICA["Rubrica"].unique()
-            filtro_modelo = np.append(["Todos"],filtro_modelo)
-            filtro_rubrica =  ["Todos","Proventos","Desconto"]
+            #filtro_modelo = RUBRICA["Rubrica"].unique()
+            #filtro_modelo = np.append(["Todos"],filtro_modelo)
+            #filtro_rubrica =  ["Todos","Proventos","Desconto"]
             #fvalor = RUBRICA["cp3_valor_calc"].unique()
             #fvalor = np.append(["Todos"],fvalor)
             
-             
-
             with filtrorubricacoluna1:
                 filtrodatarubrica = st.selectbox(
                 "Escolha a data",
@@ -1346,8 +1362,7 @@ class apresentacao():
                 index= 0)
                 
             
-            
-            with filtrorubricacoluna2:
+            '''with filtrorubricacoluna2:
                 filtrorubricarubrica = st.selectbox(
                     "Escolha a situação",
                     filtro_rubrica,
@@ -1361,7 +1376,7 @@ class apresentacao():
                     filtro_modelo,
                    help= "A Incluir",
                     key = "Filtro de modelo",
-                   index=0)
+                   index=0)'''
 
 ###CHAMADOR DE FUNÇÕES - rubricas:____________________________________________________________
         ###CHAMADOR DE FUNÇÕES - CARD Rubricas:____________________________________________________________
@@ -1369,7 +1384,12 @@ class apresentacao():
             colunacardrubricaA.metric(label= "SALÁRIO FIXO", value = self.cardrubrica( descrição="SALÁRIO FIXO",
                                                                                  data = filtrodatarubrica,
                                                                                  ))
-
+            colunacardrubricaB.metric(label= "VALE ALIMENTAÇÃO", value = self.cardrubrica( descrição="VALE ALIMENTAÇÃO",
+                                                                                 data = filtrodatarubrica,
+                                                                                 ))
+            colunacardrubricaC.metric(label= "VALE TRANSPORTE", value = self.cardrubrica( descrição="VALE TRANSPORTE",
+                                                                                            data = filtrodatarubrica,
+                                                                                            ))
 
             #colunacardrubricaA.metric(label= "SALÁRIO FIXO", value = self.cardrubricas(,
                                                                                        #filtrovalor= "SALÁRIO FIXO"))
@@ -1377,12 +1397,12 @@ class apresentacao():
 ###CHAMADOR DE FUNÇÕES - GRÁFICO 1,2 e 3 rubricas:____________________________________________________________
 #obs.: gáfico horizontal - total
             graficocoluna1,graficocoluna2,graficocoluna3 = st.columns((1,0.01,0.01))
-            self.Graficorubrica(graficocoluna1,
+            self.Graficonovo(graficocoluna1,
                                  colunadodataframe="Rubrica",
                                  orientação= "h",
                                  titulodografico= "rubricas",
                                  filtrodata=filtrodatarubrica,
-                                 filtromodelo= filtromodelorubrica
+                                 #filtromodelo= filtromodelorubrica
                                 )
             #graficocoluna0,graficocoluna2,graficocoluna3 = st.columns((0.2,1,0.01))
 
@@ -1403,29 +1423,29 @@ class apresentacao():
                 with open('style.css') as f:
                     st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
                 st.title("Resumo de Admissões")
-                filtrosadmissaocoluna1,filtrosadmissaocoluna2,filtrosadmissaocoluna3,filtroadmissaocoluna4 = st.columns([1.5,1.5,1.5,1.5])
+                filtrosadmissaocoluna1,filtrosadmissaocoluna2, = st.columns([1.5,1.5])
         
         ###DEFINIÇÃO DE FILTROS - ADMISSÃO:____________________________________________________________
         ###CHAMADOR DE FUNÇÕES - CARD valor total ADMISSAO:____________________________________________________________
 
                 ADMISSAO = DadosAdmissao()
-                filtroadmissao_mês = ADMISSAO["admissao"].unique()
-                filtroadmissao_mês = np.append(["Todos"], filtroadmissao_mês)
-                filtroadmissao_serviço = ADMISSAO["nome_quebra"].unique()
+                #filtroadmissao_mês = ADMISSAO["Data"].unique()
+                #filtroadmissao_mês = np.append(["Todos"], filtroadmissao_mês)
+                filtroadmissao_serviço = ADMISSAO["Contrato"].unique()
                 filtroadmissao_serviço = np.append(["Todos"], filtroadmissao_serviço)
-                filtroadmissao_cargo = ADMISSAO["nome_cargo"].unique()
+                filtroadmissao_cargo = ADMISSAO["Cargo"].unique()
                 filtroadmissao_cargo = np.append(["Todos"], filtroadmissao_cargo)
                 filtroadmissao_ativos = ["Todos", "Demitido", "Ativo"]
 
-                with filtrosadmissaocoluna1:
-                    filtroadmissao_mês1 = st.selectbox(
-                                                   "Escolha o mês",
-                                                   filtroadmissao_mês,
-                                                  help="A incluir",
-                                                  key= "Admissão_1",
-                                                  index= 0)
+                #with filtrosadmissaocoluna3:
+                  #  filtroadmissao_mês1 = st.selectbox(
+                   #                                "Escolha o mês",
+                   #                                filtroadmissao_mês,
+                   #                               help="A incluir",
+                   #                               key= "Admissão_1",
+                  #                                index= 0)
 
-                with filtroadmissaocoluna4:
+                with filtrosadmissaocoluna1:
                     filtroadmissao_serviço1 = st.selectbox(
                                                    "Esolha o Serviço",
                                                     filtroadmissao_serviço,
@@ -1441,13 +1461,13 @@ class apresentacao():
                                                         key = "Admissão_3",
                                                         index=0)
                     
-                with filtrosadmissaocoluna3:
+                ''' with filtrosadmissaocoluna3:
                     filtroadmissao_ativos8 = st.selectbox(
                                                         "Escolha a situacao",
                                                         filtroadmissao_ativos,
                                                         help=" A incluir",
                                                         key = "Admissão_4",
-                                                        index=0)
+                                                        index=0)'''
 
 
 ###CHAMADOR DE FUNÇÕES - ADMISSÃO:____________________________________________________________
@@ -1464,7 +1484,7 @@ class apresentacao():
 
                 GraficoevolucaomensaladmissaoA,GraficoevolucaomensaladmissaoB = st.columns((1,0.01)) 
                 self.Graficoevolucaomensaladmissao(GraficoevolucaomensaladmissaoA,
-                                            colunadataframe= "admissao",
+                                            colunadataframe= "Data",
                                            orientação= "v",
                                            titulodografico= "Quantidade Mensal de Admissões",
                                             filtroadmissaoservico =  filtroadmissao_serviço1,
@@ -1488,7 +1508,7 @@ class apresentacao():
 
 #obs.: gáfico horizontal - Cargo
                 
-                colunatitulo1, colunatitulo2,colunatitulo3 = st.columns((0.2,1,0.01))
+                '''colunatitulo1, colunatitulo2,colunatitulo3 = st.columns((0.2,1,0.01))
                 with colunatitulo2:
                     colunatitulo2.title("Custo de Admissões por Cargo")
 
@@ -1498,7 +1518,7 @@ class apresentacao():
                                           colunadataframe= "nome_cargo",
                                           orientação= "h",
                                           titulodografico="Custo de Admissões por Cargo",
-                                          filtromêsadmissao=  filtroadmissao_mês1)
+                                          filtromêsadmissao=  filtroadmissao_mês1)'''
                 
         #obs.: gáfico horizontal - Serviços
                 #GraficoserviçoadmissaoA,GraficoserviçoadmissaoB = st.columns((1,0.01))
@@ -1519,11 +1539,11 @@ class apresentacao():
         ###DEFINIÇÃO DE FILTROS - RESCISÕES:____________________________________________________________
 
             RESCISAO = DadosRescisao()
-            filtrorescisao_mês = RESCISAO["sq_dataini"].unique()
+            filtrorescisao_mês = RESCISAO["Data"].unique()
             filtrorescisao_mês = np.append(["Todos"], filtrorescisao_mês)
-            filtrorescisao_serviço = RESCISAO["sq_nome_servico"]. unique()
+            filtrorescisao_serviço = RESCISAO["Contrato"]. unique()
             filtrorescisao_serviço = np.append(["Todos"], filtrorescisao_serviço)
-            filtrorescisao_centrodecusto = RESCISAO["sq_nome_ccustos"].unique()
+            filtrorescisao_centrodecusto = RESCISAO["Centro de Custo"].unique()
             filtrorescisao_centrodecusto = np.append(["Todos"], filtrorescisao_centrodecusto)
 
             with filtrosrescisaocolunas1:
@@ -1569,7 +1589,7 @@ class apresentacao():
         ##obs: Gráfico vertical = Evolução mensal
             colgraficorescisao1,colgraficorescisao0 = st.columns((1,0.01)) 
             self.Graficoevolucaomensalrescisao(colgraficorescisao1,
-                                           colunadataframe='sq_dataini',
+                                           colunadataframe='Data',
                                            orientação= "v",
                                            titulodografico="Quantidade Mensal de Rescisões",
                                            filtroserviçorescisao=filtrorescisao_serviço1,
@@ -1578,7 +1598,7 @@ class apresentacao():
         ##obs: Gráfico Horinzontal = Serviço
             colgraficorescisao2, colgraficorescisao00 = st.columns((1,0.01))
             self.Graficoserviço_rescisao(colgraficorescisao2,
-                                     colunadataframe= "sq_nome_servico",
+                                     colunadataframe= "Contrato",
                                      orientação= "h",
                                      titulodografico= "Custo de Rescisões por Centro de Serviço",
                                      filtro_mêsrescisao = filtrorescisao_mês1
@@ -1587,7 +1607,7 @@ class apresentacao():
         ##obs: Gráfico Horinzontal = Serviço
             colgraficorescisao3,colgraficorescisao000 = st.columns((1,0.01))
             self.Graficocentrodecusto_rescisao(colgraficorescisao3,
-                                           colunadataframe="sq_nome_ccustos",
+                                           colunadataframe="Centro de Custo",
                                            orientação="h",
                                            titulodografico="Custo de Rescisões por Centro de Custo",
                                            filtro_mêsrescisao=filtrorescisao_mês1)
@@ -1679,17 +1699,7 @@ class apresentacao():
                                        titulodografico="Custo de Férias por Centro de Custo",
                                        filtro_mêsferias=filtro_mêsferias) #, inserir filtro_serviçoferias, filtro_centrodecustoferias - caso va puxar dos filtros
 
-
-    ###FORMATAÇÃO DA QUINTA PÁGINA - RUBRICAS:____________________________________________________________      
-       
-
-
-
-
-
-
-
-
+ 
 objeto=apresentacao()
 objeto.Apresentacao()
 

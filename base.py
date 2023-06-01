@@ -15,7 +15,7 @@ class base_dados():
         self.caminho_rubricas= r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\1. RELATÓRIOS FOLHA\Rubricas"#em qualquer lugar do código pode ser utilizado - dentro da classe - guiando a pasta de rubricas
         self.caminho_extratosbancarios= r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\1. RELATÓRIOS FOLHA\Extratos Bancários"
         self.caminho_indicadores = r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\1. RELATÓRIOS FOLHA\Indicadores do DP"
-
+        self.caminho_uniao = r"T:\CLIENTES\GRUPO H2F\CONTROLADORIA\1. RELATÓRIOS FOLHA\Uniao"
 
 
     def ferias(self): #CONSTROI O BANCO DE DADOS FÉRIAS
@@ -48,20 +48,27 @@ class base_dados():
             dataframe_basetemporariar = pd.read_excel(self.caminho_rescisao + "\\" + i) # + (CONCATENAR) \\ (o caminho tem barra, ou seja, ele substitui o 2° caractere especial com a \) + (concatenar) i (chamando a função for)
             self.base_rescisao=pd.concat([self.base_rescisao,dataframe_basetemporariar]) #para unir/CONCATENAR todas as planilhas em uma única - concatenar ([base antiga + a base após leitura das planilhas]) 
         #print(self.base_rescisao)
+      
         #LIMPEZA DA PLANILHA:
+
         ##### OPÇÃO 2: para excluir colunas de forma mais simplificada: Criar um data frame (nomeado como colunasdaplanilhaRESCISAO) > entre [colocar o nome de todas as colunas que serão 
         # excluídas] > criar um for i in nome do dataframe > utilizar o nome dado a nova base de dados . drop (self.base.drop) > entre (columns = i (identificando a o nome dado ao dataframe), 
        # inplace = True para preservar a base de dados)
+       
         Colunasdaplanilharescisao = ["codi_emp", "i_filiais", "i_depto", "i_ccustos", "i_servicos", "i_cargos", "admissao", "data_complemento", "aviso_indenizado", "sq_nome_emp", 
-                                     "cp_tins_emp", "cp_cgce_emp", "par_quebra", "sq_datafim", "cp_data_hora", "data_aviso", "demissao", "quebra", "sq_nome_filial", "servico_tipo_insc", "servico_cgc"]
+                                     "cp_tins_emp", "cp_cgce_emp", "par_quebra", "sq_datafim", "cp_data_hora", "data_aviso", "demissao", "quebra", "sq_nome_filial", "servico_tipo_insc", "servico_cgc", "i_empregados", "motivo", "sq_nome_depto" ]
         for i in Colunasdaplanilharescisao:
             self.base_rescisao.drop(columns=i, inplace=True)
         #PARA TRANSPOR O BANCO DE DADOS:
         #para transpor as colunas, ou seja, para unir colunas > self.base = (a nova base será igual a...) pd.melt(self.base... - pandas . melt (comando para transpor) > dentro do parenteses 
         # estará a base antiga (self.base,  id_ vars que corresponde as colunas que não serão alteradas + value_vars que corresponde as colunas que irão se unir.)
-        self.base_rescisao = pd.melt(self.base_rescisao, id_vars=["i_empregados", "nome", "motivo", "sq_dataini", "sq_nome_depto", "sq_nome_cargo", "sq_nome_ccustos",
-                                                                   "sq_nome_servico"], value_vars=["salario", "saldo_fgts", "fgts_rescisao", "cp_liquido", "complemento_saldo_fgts", "proventos", 
+        self.base_rescisao = pd.melt(self.base_rescisao, id_vars=[ "nome", "sq_dataini",  "sq_nome_cargo", "sq_nome_ccustos", "sq_nome_servico",], 
+                                                     value_vars=[  "saldo_fgts", "fgts_rescisao", "cp_liquido", "complemento_saldo_fgts", "proventos", 
                                                                                                                                  "descontos"])
+        self.base_rescisao.rename({"value":"Valor", "variable": "Tipo", "sq_dataini": "Data", "sq_nome_cargo": "Cargo", "sq_nome_servico": "Contrato", "sq_nome_ccustos":"Centro de Custo" }, axis=1, inplace= True)
+        
+        
+       
         self.base_rescisao.to_excel("rescisões jan-mar.xlsx", index=False) #para imprimir a nova base
 #__________________________________________________________________________________________________________________________________
     def Admissao(self):#CONSTROI O BANCO DE DADOS ADMISSAO
@@ -70,11 +77,18 @@ class base_dados():
         for i in listadearquivos_admissao:
             dataframe_basetemporariaa = pd.read_excel(self.caminho_admissao + "\\" + i) # + (CONCATENAR) \\ (o caminho tem barra, ou seja, ele substitui o 2° caractere especial com a \) + (concatenar) i (chamando a função for)
             self.base_admissao = pd.concat([self.base_admissao,dataframe_basetemporariaa]) #para unir/CONCATENAR todas as planilhas em uma única - concatenar ([base antiga + a base após leitura das planilhas]) 
+         
+        self.base_admissao.rename(columns={'salario': 'Valor'}, inplace = True)
+        self.base_admissao.rename(columns={'nome_quebra': 'Contrato'}, inplace = True)
+        self.base_admissao.rename(columns={'nome_cargo': 'Cargo'}, inplace = True)
+        self.base_admissao.rename(columns={'admissao': 'Data'}, inplace = True)
+
+
         #LIMPEZA DA PLANILHA:
         ##### OPÇÃO 2: para excluir colunas de forma mais simplificada: Criar um data frame (nomeado como colunasdaplanilhaADMISSAO) = > entre [colocar o nome de todas as colunas que serão 
         # excluídas] > criar um for i in nome do dataframe: > utilizar o nome dado a nova base de dados . drop (self.base.drop) > entre (columns = i (identificando a o nome dado ao dataframe), 
        # inplace = True para preservar a base de dados)
-        Colunasplanilhadeadmissao= ["vinculo", "categoria", "forma_pagto", "horas_mes", "i_cargos", "par_quebra", "quebra","datasituacao", "cp_now", "cp_nome_emp", "servico_tipo_insc",
+        Colunasplanilhadeadmissao= ["vinculo","categoria", "forma_pagto", "horas_mes", "i_cargos", "par_quebra", "quebra","datasituacao", "cp_now", "cp_nome_emp", "servico_tipo_insc",
                                      "servico_cgc", "codi_emp"]
         for i in Colunasplanilhadeadmissao:
             self.base_admissao.drop(columns= i, inplace=True)
@@ -194,30 +208,16 @@ class base_dados():
         
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 Chamadordafunção=base_dados() #as próximas funções serão chamadas abaixo desta primeira. 
 #Chamadordafunção.ferias()
-#Chamadordafunção.Rescisao()
-#Chamadordafunção.Admissao()
+Chamadordafunção.Rescisao()
+Chamadordafunção.Admissao()
 #Chamadordafunção.Extratos()
-Chamadordafunção.Rubricas()
+#Chamadordafunção.Rubricas()
 #Chamadordafunção.ExtratosBancarios()
 #Chamadordafunção.IndicadoresDP()
+
+
+
 
 
